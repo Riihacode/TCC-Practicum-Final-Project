@@ -3,7 +3,7 @@ import { getVideosBySlug, deleteVideo } from "../api";
 import { jwtDecode } from 'jwt-decode';
 import { Card, Col, Row, Button } from "react-bootstrap";
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "https://be-sosial-media-872136705893.us-central1.run.app/";
 
 const Studio = () => {
   const [slug, setSlug] = useState("");

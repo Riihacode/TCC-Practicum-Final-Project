@@ -3,7 +3,7 @@ import { Card, Button, Form } from 'react-bootstrap';
 import { jwtDecode } from 'jwt-decode';
 import { getUserById, updateUsername, uploadProfilePic, API_URL } from '../api';
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = "https://be-sosial-media-872136705893.us-central1.run.app/";
 
 const Profile = () => {
   const [username, setUsername] = useState('');
