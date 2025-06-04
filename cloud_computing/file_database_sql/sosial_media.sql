@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 03, 2025 at 02:45 PM
+-- Generation Time: Jun 04, 2025 at 12:10 PM
 -- Server version: 10.4.25-MariaDB
 -- PHP Version: 8.1.10
 
@@ -49,6 +49,7 @@ CREATE TABLE `users` (
   `email` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
   `profile_pic` varchar(255) DEFAULT NULL,
+  `refresh_token` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -56,9 +57,9 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`id`, `username`, `slug`, `email`, `password`, `profile_pic`, `created_at`) VALUES
-(1, 'aria nightcore', 'aria-nightcore', 'arianightcore@gmail.com', '12345678', '/upload/users/1/uploadedUserPhotoProfile/1748951733455-hutao.jpg', '2025-06-03 11:45:24'),
-(2, 'Jagoan Hacker', 'jagoan-hacker', 'jagoanhacker@gmail.com', 'admin1234', '/upload/users/2/uploadedUserPhotoProfile/1748953888209-hacker.jpg', '2025-06-03 12:28:41');
+INSERT INTO `users` (`id`, `username`, `slug`, `email`, `password`, `profile_pic`, `refresh_token`, `created_at`) VALUES
+(1, 'Aria Nightcore', 'aria-nightcore', 'arianightcore@gmail.com', '$2b$10$V5eSmH1FmMuId7ozPV/GT.b2m1/nAK21cS8raV0EfyleZVN3dmLUS', '/upload/users/1/uploadedUserPhotoProfile/1749025753363-hutao.jpg', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwidXNlcm5hbWUiOiJBcmlhIE5pZ2h0Y29yZSIsImVtYWlsIjoiYXJpYW5pZ2h0Y29yZUBnbWFpbC5jb20iLCJzbHVnIjoiYXJpYS1uaWdodGNvcmUiLCJpYXQiOjE3NDkwMjkzMjQsImV4cCI6MTc0OTExNTcyNH0.ePDkvxU0wpEHTr7HyAo-fx6_s0ArVscHl-X_EAVxpEk', '2025-06-04 08:27:58'),
+(2, 'Jagoan Hacker', 'jagoan-hacker', 'jagoanhacker@gmail.com', '$2b$10$6l8mV1.jdP4WkprixRqRxOlruO3iqgwvPCyiewBoK4WEg.WD/sDKO', '/upload/users/2/uploadedUserPhotoProfile/1749026508497-hacker.jpg', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwidXNlcm5hbWUiOiJKYWdvYW4gSGFja2VyIiwiZW1haWwiOiJqYWdvYW5oYWNrZXJAZ21haWwuY29tIiwic2x1ZyI6ImphZ29hbi1oYWNrZXIiLCJpYXQiOjE3NDkwMzE0MTcsImV4cCI6MTc0OTExNzgxN30.WOGpQ_zGCwPHLCAcj430VQA7i6Sns_Me1P9C6AGi5qM', '2025-06-04 08:40:55');
 
 -- --------------------------------------------------------
 
@@ -81,10 +82,10 @@ CREATE TABLE `videos` (
 --
 
 INSERT INTO `videos` (`id`, `user_id`, `title`, `description`, `video_url`, `thumbnail_url`, `uploaded_at`) VALUES
-(1, 1, 'vernalta - sapi', 'Ini video dari vernalta youtube', '/upload/users/1/uploadedVideo/1748952116520-video_sapi.mp4', '/upload/users/1/uploadedVideoThumbnail/1748952912234-thumbnail_sapi.png', '2025-06-03 05:01:56'),
-(2, 1, '\"Secrets Of The Silent Witch\" | OFFICIAL TRAILER', 'SUMMARY Monica Everett, the Silent Witch, is the only mage in the world who can use unchanted magecraft, a true hero who singlehandedly defeated a legendary black dragon. However, this young genius is actually...super-duper shy! That\'s right: She learned to cast spells silently just to avoid speaking in public, and despite her power, she has zero self-confidence. Now Monica has been tasked with secretly guarding the second prince. Can she keep it together as she faces both the evil forces targeting the prince and the terrors of social interaction?', '/upload/users/1/uploadedVideo/1748952451129-silent_majou.mp4', '/upload/users/1/uploadedVideoThumbnail/1748953565427-silent_witch.png', '2025-06-03 05:07:31'),
-(3, 2, 'Kegiatan di malam hari', 'Kali linux testing bobol wifi. Try hard btw', '/upload/users/2/uploadedVideo/1748954121325-laptop_hafizh.mp4', '/upload/users/2/uploadedVideoThumbnail/1748954566962-bobol_wifi.jpg', '2025-06-03 05:35:21'),
-(4, 2, 'Tetap minum air walau stress', 'Gatau mau nulis apaan, mending perbanyak hardcore personal training', '/upload/users/2/uploadedVideo/1748954229289-laptop_hafizh.mp4', '/upload/users/2/uploadedVideoThumbnail/1748954590311-minum_air.jpg', '2025-06-03 05:37:09');
+(1, 1, '\"Secrets Of The Silent Witch\" | OFFICIAL TRAILER // New PV | SUBBED', '\"Secrets Of The Silent Witch\" | OFFICIAL TRAILER // New PV | SUBBED \n\nSUMMARY Monica Everett, the Silent Witch, is the only mage in the world who can use unchanted magecraft, a true hero who singlehandedly defeated a legendary black dragon. However, this young genius is actually...super-duper shy! That\'s right: She learned to cast spells silently just to avoid speaking in public, and despite her power, she has zero self-confidence. Now Monica has been tasked with secretly guarding the second prince. Can she keep it together as she faces both the evil forces targeting the prince and the terrors of social interaction?\n\n#anime #manga #secretsofasilentwitch', '/upload/users/1/uploadedVideo/1749026213885-silent_majou.mp4', '/upload/users/1/uploadedVideoThumbnail/1749027084224-silent_witch.png', '2025-06-04 01:36:53'),
+(2, 1, 'Video Vernalta - Sapi', 'Video buatan Vernalta tentang sapi. Entahlah deskripsi ngasal', '/upload/users/1/uploadedVideo/1749026314211-video_sapi.mp4', '/upload/users/1/uploadedVideoThumbnail/1749027098010-thumbnail_sapi.png', '2025-06-04 01:38:34'),
+(3, 2, 'Bobol Wifi', 'Kali Linux - tutorial bobol wifi. Try hard btw', '/upload/users/2/uploadedVideo/1749026611989-laptop_hafizh.mp4', '/upload/users/2/uploadedVideoThumbnail/1749026940178-bobol_wifi.jpg', '2025-06-04 01:43:31'),
+(4, 2, 'Hacker juga butuh minum', 'Try hard itu ada batasnya, jaga fokus dengan minum air putih', '/upload/users/2/uploadedVideo/1749026814515-botol_minum.mp4', '/upload/users/2/uploadedVideoThumbnail/1749026958419-minum_air.jpg', '2025-06-04 01:46:54');
 
 --
 -- Indexes for dumped tables

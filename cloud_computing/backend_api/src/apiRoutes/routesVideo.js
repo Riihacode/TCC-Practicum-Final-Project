@@ -17,6 +17,10 @@ import upload from                  "../apiMiddleware/video/middlewareVideo.js";
 import validateUserId from          "../apiMiddleware/user/middlewareUserValidateUserId.js";
 import validateVideoId from         "../apiMiddleware/video/middlewareVideoValidateVideoId.js";
 import syncVideosWithStorage from   "../apiMiddleware/video/middlewareVideoSyncWithStorage.js";
+// implementasi authentication
+import { verifyToken } from "../apiMiddleware/token/verifyToken.js";
+import { checkUserIdMatch } from "../apiMiddleware/user/middlewareUserCheckMatch.js";
+import { checkVideoOwnership } from "../apiMiddleware/video/middlewareVideoOwnership.js";
 
 const router = express.Router();
 
@@ -25,15 +29,15 @@ console.log(typeof validateUserId);         // Harus "function"
 console.log(typeof upload.single);          // Harus "function"
 
 // Content Creator
-router.post("/users/:user_id/videos", videoUploadLimiter, uploadVideo);
-router.put("/videos/:video_id", updateVideoMetadata);
-router.post("/videos/:video_id/thumbnail", validateVideoId, uploadVideoThumbnail);
-router.put("/videos/:video_id/thumbnail", validateVideoId, updateVideoThumbnail);
+router.post("/users/:user_id/videos", verifyToken, checkUserIdMatch, videoUploadLimiter, uploadVideo);
+router.put("/videos/:video_id", verifyToken, checkVideoOwnership, updateVideoMetadata);
+router.post("/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, validateVideoId, uploadVideoThumbnail);
+router.put("/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, validateVideoId, updateVideoThumbnail);
 router.get("/videos/:video_id/thumbnail", validateVideoId, getVideoThumbnail);
-router.delete("/videos/:video_id/thumbnail", validateVideoId, deleteVideoThumbnail);
-router.delete("/videos/:video_id", validateVideoId, deleteVideo);
+router.delete("/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, validateVideoId, deleteVideoThumbnail);
+router.delete("/videos/:video_id", verifyToken, checkVideoOwnership, validateVideoId, deleteVideo);
 
-// VIewer
+// Viewer
 router.get("/videos", syncVideosWithStorage, getAllVideos);
 router.get("/videos/:video_id", validateVideoId, getVideoId);
 // Channel

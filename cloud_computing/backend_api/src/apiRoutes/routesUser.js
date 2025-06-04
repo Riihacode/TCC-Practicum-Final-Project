@@ -12,6 +12,9 @@ import {
 } from "../apiControllers/controllerUser.js";
 // implementasi token
 import { refreshToken } from "../apiMiddleware/token/refreshToken.js";
+import { verifyToken } from "../apiMiddleware/token/verifyToken.js";
+import { checkUserIdMatch } from "../apiMiddleware/user/middlewareUserCheckMatch.js";
+
 
 const router = express.Router();
 
@@ -23,9 +26,9 @@ router.delete("/users/:user_id", deleteUser);
 router.put("/users/:user_id/username", updateUsername);
 
 // Profile picture
-router.post("/users/:user_id/profile-picture", uploadProfilePic);
-router.put("/users/:user_id/profile-picture", updateProfilePic);
-router.delete("/users/:user_id/profile-picture", deleteProfilePic);
+router.post("/users/:user_id/profile-picture", verifyToken, checkUserIdMatch, uploadProfilePic);
+router.put("/users/:user_id/profile-picture", verifyToken, checkUserIdMatch, updateProfilePic);
+router.delete("/users/:user_id/profile-picture", verifyToken, checkUserIdMatch, deleteProfilePic);
 
 // implementasi token
 router.get("/token", refreshToken);
