@@ -1,11 +1,11 @@
 steps:
   - name: "node:22"
-    dir: "frontend"
+    dir: "cloud_computing/frontend"
     entrypoint: "npm"
     args: ["install"]
 
   - name: "node:22"
-    dir: "frontend"
+    dir: "cloud_computing/frontend"
     entrypoint: "npm"
     args: ["run", "build"]
 
