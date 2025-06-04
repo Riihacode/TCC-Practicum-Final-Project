@@ -9,6 +9,9 @@ import "./src/models/initModels.js"; // agar relasi aktif
 import routesUser from "./src/apiRoutes/routesUser.js";
 import routesVideo from "./src/apiRoutes/routesVideo.js";
 import routesCommunityPost from "./src/apiRoutes/routesCommunityPost.js";
+// implementasi cookies
+import cookieParser from "cookie-parser";
+
 
 // Konversi __dirname (karena ES Module tidak punya langsung)
 const __filename = fileURLToPath(import.meta.url);
@@ -16,6 +19,8 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// implementasi cookies
+app.use(cookieParser());
 // Middlewares umum
 app.use(cors());
 app.use(express.json());

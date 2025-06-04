@@ -52,7 +52,6 @@ var refreshToken = function refreshToken(req, res) {
           return _context.abrupt("return", res.sendStatus(403));
 
         case 11:
-          // Kalo ketemu
           _jsonwebtoken["default"].verify(_refreshToken, process.env.REFRESH_TOKEN_SECRET, function (err, decoded) {
             if (err) return res.sendStatus(403);
             console.log("sudah lewat 403 ke dua di controller");
@@ -72,15 +71,19 @@ var refreshToken = function refreshToken(req, res) {
           });
 
         case 12:
-          _context.next = 17;
+          _context.next = 18;
           break;
 
         case 14:
           _context.prev = 14;
           _context.t0 = _context["catch"](0);
-          console.log(_context.t0);
+          // console.log(error);
+          console.error("[REFRESH-TOKEN-ERROR]", _context.t0.message);
+          res.status(500).json({
+            error: "Internal server error"
+          });
 
-        case 17:
+        case 18:
         case "end":
           return _context.stop();
       }

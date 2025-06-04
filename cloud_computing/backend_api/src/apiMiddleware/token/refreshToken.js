@@ -17,9 +17,9 @@ export const refreshToken = async (req, res) => {
     });
 
     // Kalo ga ketemu
-    if (!user.refresh_token) return res.sendStatus(403);
+    if (!user.refresh_token) { return res.sendStatus(403); }
     // Kalo ketemu
-    else
+    else {
         jwt.verify(
             refreshToken,
             process.env.REFRESH_TOKEN_SECRET,
@@ -38,7 +38,10 @@ export const refreshToken = async (req, res) => {
             res.json({ accessToken });
             }
         );
+      }
     } catch (error) {
-        console.log(error);
+        // console.log(error);
+        console.error("[REFRESH-TOKEN-ERROR]", error.message);
+        res.status(500).json({ error: "Internal server error" });
     }
 };

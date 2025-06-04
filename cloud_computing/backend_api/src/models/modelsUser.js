@@ -30,6 +30,10 @@ const User = db.define(
             type: DataTypes.STRING,
             allowNull: true
         },
+        refresh_token: {            // Tambahkan ini di database sql
+            type: DataTypes.TEXT,
+            allowNull: true
+        }, 
         created_at: {
             type: DataTypes.DATE,
             allowNull: true

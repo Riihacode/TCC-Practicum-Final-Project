@@ -4,6 +4,10 @@ import path from "path";
 import Busboy from "busboy";
 import slugify from "slugify";
 import { Sequelize, Op } from "sequelize";
+// Implementasi Authentication
+import { hashPassword } from "../services/serviceAuth.js";
+import jwt from "jsonwebtoken";
+import { comparePassword } from "../services/serviceAuth.js";
 
 async function registerUser(req, res) {
     const { username, email, password } = req.body;
@@ -37,11 +41,21 @@ async function registerUser(req, res) {
         }
 
         // Simpan user baru
+        // const newUser = await User.create({
+        //     username,
+        //     slug,
+        //     email,
+        //     password
+        // });
+
+        // Ganti source code di atas dan pakai ini
+        const hashedPassword = await hashPassword(password);
+
         const newUser = await User.create({
             username,
             slug,
             email,
-            password
+            password: hashedPassword
         });
 
         console.log(`[REGISTER] New user: ${username} -> slug: ${slug}`);
@@ -61,24 +75,98 @@ async function registerUser(req, res) {
     }
 }
 
+// async function loginUser(req, res) {
+//     const { email, password } = req.body;
+
+//     try {
+//         const user = await User.findOne({
+//             where: { email, password },
+//             attributes: ["id", "username", "email"]
+//         });
+
+//         if (!user) {
+//             return res.status(401).json({ error: "Invalid email or password" });
+//         }
+
+//         console.log(`[LOGIN] User logged in: ID = ${user.id}, Username = ${user.username}, Email = ${user.email}`);
+//         res.status(200).json({ message: "Login successful", user });
+//     } catch (error) {
+//         console.error(`[LOGIN-ERROR] Failed to process login: ${error.message}`);
+//         res.status(500).json({ error: error.message });
+//     }
+// }
+
 async function loginUser(req, res) {
     const { email, password } = req.body;
 
     try {
-        const user = await User.findOne({
-            where: { email, password },
-            attributes: ["id", "username", "email"]
-        });
-
-        if (!user) {
+        const user = await User.findOne({ where: { email } });
+        if (!user || !(await comparePassword(password, user.password))) {
             return res.status(401).json({ error: "Invalid email or password" });
         }
 
-        console.log(`[LOGIN] User logged in: ID = ${user.id}, Username = ${user.username}, Email = ${user.email}`);
-        res.status(200).json({ message: "Login successful", user });
+        const userData = {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            slug: user.slug
+        };
+
+        const accessToken = jwt.sign(
+            userData, 
+            process.env.ACCESS_TOKEN_SECRET, 
+            { 
+                expiresIn: "20m" 
+            }
+        );
+        const refreshToken = jwt.sign(
+            userData, 
+            process.env.REFRESH_TOKEN_SECRET, 
+            { 
+                expiresIn: "1d" 
+            }
+        );
+
+        // Simpan refresh_token di DB
+        await User.update(
+            { refresh_token: refreshToken }, 
+            { where: { id: user.id } }
+        );
+
+        // Simpan ke cookie
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            sameSite: "Strict", // bisa diubah jadi "Lax" jika diakses dari frontend
+            secure: false,      // true jika deploy pakai HTTPS
+            maxAge: 24 * 60 * 60 * 1000 // 1 hari
+        });
+
+        res.status(200).json({
+            message: "Login berhasil",
+            accessToken,
+            user: userData
+        });
     } catch (error) {
-        console.error(`[LOGIN-ERROR] Failed to process login: ${error.message}`);
+        console.error(`[LOGIN ERROR] ${error.message}`);
         res.status(500).json({ error: error.message });
+    }
+}
+
+async function logoutUser(req, res) {
+    try {
+        const refreshToken = req.cookies.refreshToken;
+        if (!refreshToken) return res.sendStatus(204); // No Content
+
+        const user = await User.findOne({ where: { refresh_token: refreshToken } });
+        if (!user) return res.sendStatus(204); // Tidak ditemukan juga tidak masalah
+
+        await User.update({ refresh_token: null }, { where: { id: user.id } });
+
+        res.clearCookie("refreshToken");
+        return res.status(200).json({ message: "Logout berhasil" });
+    } catch (err) {
+        console.error("[LOGOUT-ERROR]", err.message);
+        return res.status(500).json({ error: "Internal server error" });
     }
 }
 
@@ -347,6 +435,7 @@ async function updateProfilePic(req, res) {
 export {
     registerUser, 
     loginUser, 
+    logoutUser,
     getUserById,
     deleteUser, 
     updateUsername,
