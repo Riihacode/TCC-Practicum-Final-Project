@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Form } from 'react-bootstrap';
 import { jwtDecode } from 'jwt-decode';
-import { getUserById, updateUsername, uploadProfilePic } from '../api'; // sesuaikan path-nya
+import { getUserById, updateUsername, uploadProfilePic, API_URL } from '../api';
+
+const BASE_URL = "http://localhost:3000";
 
 const Profile = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
-  const [profilePic, setProfilePic] = useState('https://placehold.co/600x400');
+  const [profilePic, setProfilePic] = useState('');
   const [newPicFile, setNewPicFile] = useState(null);
   const [previewPicUrl, setPreviewPicUrl] = useState(null);
   const [user_id, setUser_id] = useState(null);
@@ -28,8 +30,9 @@ const Profile = () => {
         .then((data) => {
           setUsername(data.username || '');
           setEmail(data.email || '');
-          if (data.profilePic) {
-            setProfilePic(data.profilePic);
+          if (data.profile_pic) {
+            setProfilePic(data.profile_pic);
+            
           }
         })
         .catch((err) => {
@@ -82,7 +85,8 @@ const Profile = () => {
       <Card style={{ width: '22rem' }} className="shadow-sm">
         <Card.Img
           variant="top"
-          src={previewPicUrl || profilePic}
+          src={previewPicUrl || (profilePic ? `${BASE_URL}${profilePic}` : 'https://placehold.co/600x400')}
+
           alt="Profile"
           className="rounded-circle mx-auto mt-4"
           style={{ width: '150px', height: '150px', objectFit: 'cover' }}

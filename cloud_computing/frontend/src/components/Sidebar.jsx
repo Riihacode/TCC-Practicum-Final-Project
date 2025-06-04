@@ -1,4 +1,5 @@
 import React from 'react';
+import { logoutUser } from '../api';
 import Nav from 'react-bootstrap/Nav';
 import { useNavigate } from 'react-router-dom';
 import { FaHome, FaRegUser, FaFileUpload, FaFire, FaMusic, FaGamepad, FaFilm, FaSignOutAlt } from 'react-icons/fa';
@@ -6,9 +7,15 @@ import { FaHome, FaRegUser, FaFileUpload, FaFire, FaMusic, FaGamepad, FaFilm, Fa
 const Sidebar = () => {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.clear(); // hapus token/session
-    navigate('/');    // redirect ke halaman login (ganti sesuai route login kamu)
+  const handleLogout = async () => {
+    try {
+      await logoutUser()
+      localStorage.clear(); // hapus token/session
+      alert("Berhasil Logout");
+      navigate('/');
+    } catch (error) {
+      console.error("Logout gagal:", error);
+    }
   };
 
   return (
@@ -23,8 +30,8 @@ const Sidebar = () => {
         <Nav.Link onClick={() => navigate('/videoUpload')}>
           <FaFileUpload className="me-2" /> Upload
         </Nav.Link>
-        <Nav.Link onClick={() => navigate('/trending')}>
-          <FaFire className="me-2" /> Trending
+        <Nav.Link onClick={() => navigate('/studio')}>
+          <FaFire className="me-2" /> Studio
         </Nav.Link>
         <Nav.Link onClick={() => navigate('/music')}>
           <FaMusic className="me-2" /> Music

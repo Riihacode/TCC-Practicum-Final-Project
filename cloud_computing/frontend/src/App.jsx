@@ -9,6 +9,7 @@ import VideoDetailPage from "./pages/VideoDetailPage";
 import ProfilePage from "./pages/ProfilePage";
 import VideoUploadPage from "./pages/UploadVideoPage";
 import PrivateRoute from "./components/PrivateRoute";
+import StudioPage from "./pages/StudioPage";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("accessToken"));
@@ -34,9 +35,22 @@ function App() {
               <ProfilePage/>
             </PrivateRoute>
           } />
+        <Route
+          path="/videoUpload"
+          element={
+            <PrivateRoute token={token}>
+              <VideoUploadPage/>
+            </PrivateRoute>
+          } />
+        <Route
+          path="/studio"
+          element={
+            <PrivateRoute token={token}>
+              <StudioPage/>
+            </PrivateRoute>
+          } />
 
 
-        <Route path="/videoUpload" element={<VideoUploadPage/>} />
         <Route/>
       </Routes>
     </Router>

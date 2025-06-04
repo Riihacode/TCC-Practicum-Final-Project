@@ -1,17 +1,41 @@
-import React, { useState } from "react";
-import { uploadVideo } from "../api";
+import React, { useState, useEffect } from "react";
+import { uploadVideo, uploadThumbnail } from "../api";
+import { jwtDecode } from "jwt-decode";
+
 
 const VideoUploadForm = () => {
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [message, setMessage] = useState("");
+  const [userId, setUserId] = useState(null);
+  const [thumbnail, setThumbnail] = useState(null);
 
-  const userId = 1; // Ganti dengan user id login yang sesuai
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+
+    if (!token) {
+      console.warn("Token tidak ditemukan");
+      return;
+    }
+
+    try {
+      const decoded = jwtDecode(token);
+      setUserId(decoded.id);
+    } catch (err) {
+      console.error("Gagal decode token:", err);
+    }
+  }, []);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
+
+  const handleThumbnailChange = (e) => {
+  setThumbnail(e.target.files[0]);
+};
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,16 +44,32 @@ const VideoUploadForm = () => {
       return;
     }
 
+    if (!userId) {
+      setMessage("❌ User belum dikenali. Silakan login ulang.");
+      return;
+    }
+
     try {
-      await uploadVideo(userId, file, title, description);
-      setMessage("✅ Video berhasil diupload!");
-      setTitle("");
-      setDescription("");
-      setFile(null);
+      // 1. Upload video
+    const videoData = await uploadVideo(userId, file, title, description);
+    setMessage("✅ Video berhasil diupload!");
+
+    // 2. Upload thumbnail jika tersedia
+    if (thumbnail && videoData?.id) {
+      await uploadThumbnail(videoData.id, thumbnail);
+      setMessage((prev) => prev + " ✅ Thumbnail berhasil diupload!");
+    }
+
+    // Reset form
+    setTitle("");
+    setDescription("");
+    setFile(null);
+    setThumbnail(null);
     } catch (error) {
       console.error(error);
       setMessage(error.response?.data?.error || "❌ Upload gagal.");
     }
+    
   };
 
   return (
@@ -59,6 +99,15 @@ const VideoUploadForm = () => {
           ></textarea>
         </div>
         <div className="mb-3">
+          <label className="form-label">Thumbnail (opsional)</label>
+          <input
+            type="file"
+            className="form-control"
+            accept="image/*"
+            onChange={handleThumbnailChange}
+          />
+        </div>
+        <div className="mb-3">
           <label className="form-label">File Video</label>
           <input
             type="file"
@@ -79,6 +128,8 @@ const VideoUploadForm = () => {
       )}
     </div>
   );
-};
+  
+} ;
+
 
 export default VideoUploadForm;

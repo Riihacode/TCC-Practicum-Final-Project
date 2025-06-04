@@ -8,7 +8,7 @@ const getToken = () => localStorage.getItem('accessToken');
 // Refresh token jika expired
 export const getNewAccessToken = async () => {
   try {
-    const response = await axios.post(`${API_URL}/refresh-token`, {}, {
+    const response = await axios.post(`${API_URL}/token`, {}, {
       withCredentials: true
     });
     const { accessToken } = response.data;
@@ -100,12 +100,13 @@ export const updateVideoMetadata = async (videoId, data) => {
   return response.data;
 };
 
+
 // THUMBNAIL API
 
 // Upload thumbnail
 export const uploadThumbnail = async (videoId, file) => {
   const formData = new FormData();
-  formData.append('thumbnail', file);
+  formData.append('thumbnail_url', file);
 
   const response = await axiosInstance.post(`/videos/${videoId}/thumbnail`, formData, {
     headers: {
@@ -180,7 +181,7 @@ export const loginUser = async (data) => {
 
 // Logout user
 export const logoutUser = async () => {
-  const response = await axiosInstance.delete("/logout");
+  const response = await axiosInstance.delete("/users/logout");
   return response.data;
 };
 
