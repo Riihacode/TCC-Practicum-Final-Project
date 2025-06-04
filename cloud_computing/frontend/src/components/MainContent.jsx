@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, Row, Col } from 'react-bootstrap';
 import { getAllVideos } from '../api'; // sesuaikan pathnya
 import { useNavigate } from 'react-router-dom';
-import { API_URL } from "../api";
+import { BASE_URL } from '../utils';
 
-const BASE_URL_VIDEO = '../../../data_dummy/';
 
 const MainContent = () => {
   const [videos, setVideos] = useState([]);
@@ -52,7 +51,7 @@ const MainContent = () => {
                 }}
               >
                 <div className="ratio ratio-16x9">
-                  <Card.Img src={`${API_URL}${video.thumbnail_url}`} className="rounded" />
+                  <Card.Img src={`${BASE_URL}${video.thumbnail_url}`} className="rounded" />
                 </div>
                 <Card.Body className="p-2">
                   <Card.Title className="h6 mb-1 text-truncate" title={video.title}>

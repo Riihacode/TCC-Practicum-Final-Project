@@ -1,25 +1,79 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Button, Form } from 'react-bootstrap';
+import { jwtDecode } from 'jwt-decode';
+import { getUserById, updateUsername, uploadProfilePic } from '../api'; // sesuaikan path-nya
 
 const Profile = () => {
-  const [username, setUsername] = useState('hafizh_dev');
-  const [email] = useState('hafizh@example.com');
-  const [profilePic, setProfilePic] = useState('https://via.placeholder.com/150');
-  const [newPic, setNewPic] = useState(null);
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [profilePic, setProfilePic] = useState('https://placehold.co/600x400');
+  const [newPicFile, setNewPicFile] = useState(null);
+  const [previewPicUrl, setPreviewPicUrl] = useState(null);
+  const [user_id, setUser_id] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+
+    if (!token) {
+      console.warn("Token tidak ditemukan");
+      return;
+    }
+
+    try {
+      const decoded = jwtDecode(token);
+      const id = decoded.id;
+      setUser_id(id);
+
+      getUserById(id)
+        .then((data) => {
+          setUsername(data.username || '');
+          setEmail(data.email || '');
+          if (data.profilePic) {
+            setProfilePic(data.profilePic);
+          }
+        })
+        .catch((err) => {
+          console.error("Gagal mengambil data user:", err);
+        });
+    } catch (error) {
+      console.error("Token tidak valid:", error);
+    }
+  }, []);
 
   const handleUsernameChange = (e) => setUsername(e.target.value);
 
   const handleProfilePicChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setNewPic(URL.createObjectURL(file));
+      setNewPicFile(file);
+      setPreviewPicUrl(URL.createObjectURL(file));
     }
   };
 
-  const handleSave = () => {
-    if (newPic) {
-      setProfilePic(newPic);
-      setNewPic(null);
+  const handleSave = async () => {
+    if (!user_id) return;
+
+    try {
+      // Update username jika berubah
+      if (username) {
+        await updateUsername(user_id, { username });
+        console.log("Username berhasil diperbarui");
+        alert("Username berhasil diperbarui")
+      }
+
+      // Upload foto profil jika ada yang baru
+      if (newPicFile) {
+        const res = await uploadProfilePic(user_id, newPicFile);
+        setProfilePic(res.profilePicUrl || profilePic); // pastikan field-nya sesuai
+        console.log("Foto profil berhasil diunggah");
+        setNewPicFile(null);
+        setPreviewPicUrl(null);
+      }
+
+      alert("Perubahan berhasil disimpan!");
+    } catch (error) {
+      console.error("Gagal menyimpan perubahan:", error);
+      alert("Gagal menyimpan perubahan");
     }
   };
 
@@ -28,7 +82,7 @@ const Profile = () => {
       <Card style={{ width: '22rem' }} className="shadow-sm">
         <Card.Img
           variant="top"
-          src={newPic || profilePic}
+          src={previewPicUrl || profilePic}
           alt="Profile"
           className="rounded-circle mx-auto mt-4"
           style={{ width: '150px', height: '150px', objectFit: 'cover' }}
@@ -36,7 +90,7 @@ const Profile = () => {
         <Card.Body>
           <Form>
             <Form.Group className="mb-3">
-              <Form.Label>Change Profile Picture</Form.Label>
+              <Form.Label>Ganti Foto Profil</Form.Label>
               <Form.Control type="file" accept="image/*" onChange={handleProfilePicChange} />
             </Form.Group>
 
@@ -52,7 +106,7 @@ const Profile = () => {
 
             <div className="text-center">
               <Button variant="primary" onClick={handleSave}>
-                Save Changes
+                Simpan Perubahan
               </Button>
             </div>
           </Form>

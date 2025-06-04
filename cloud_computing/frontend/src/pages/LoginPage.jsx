@@ -1,13 +1,32 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { loginUser } from "../api";
 
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        try {
+            const data = { email,password};
+            const response = await loginUser(data);
+
+            // Simpan token ke localStorage
+            localStorage.setItem("accessToken", response.accessToken);
+            console.log("Token:", response.accessToken);
+
+            console.log("Login berhasil:", response);
+
+            alert("Login berhasil!");
+
+            navigate("/home");
+        } catch (error) {
+            console.error("Login gagal:", error.response?.data || error.message);
+      alert("Login gagal: " + (error.response?.data?.message || error.message));
+        }
         console.log("Email: ",email);
         console.log("Password: ",password);
     };
@@ -47,7 +66,7 @@ return(
                         spaces, special characters, or emoji.
                     </div>
                 </div>
-                <Link to="/home"><button type="submit" className="btn btn-primary" > login</button></Link>
+                <button type="submit" className="btn btn-primary" > login</button>
             </form>
 
         </div>

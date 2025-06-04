@@ -3,22 +3,22 @@ import axios from 'axios';
 export const API_URL = 'http://localhost:3000/api'; // Ganti sesuai environment
 
 // Ambil token dari localStorage
-// const getToken = () => localStorage.getItem('accessToken');
+const getToken = () => localStorage.getItem('accessToken');
 
-// // Refresh token jika expired
-// export const getNewAccessToken = async () => {
-//   try {
-//     const response = await axios.post(`${API_URL}/refresh-token`, {}, {
-//       withCredentials: true
-//     });
-//     const { accessToken } = response.data;
-//     localStorage.setItem('accessToken', accessToken);
-//     return accessToken;
-//   } catch (error) {
-//     console.error("Gagal refresh token", error);
-//     window.location.href = "/login";
-//   }
-// };
+// Refresh token jika expired
+export const getNewAccessToken = async () => {
+  try {
+    const response = await axios.post(`${API_URL}/refresh-token`, {}, {
+      withCredentials: true
+    });
+    const { accessToken } = response.data;
+    localStorage.setItem('accessToken', accessToken);
+    return accessToken;
+  } catch (error) {
+    console.error("Gagal refresh token", error);
+    window.location.href = "/home";
+  }
+};
 
 // Buat axios instance
 const axiosInstance = axios.create({
@@ -29,31 +29,31 @@ const axiosInstance = axios.create({
 });
 
 // Tambahkan token ke header request
-// axiosInstance.interceptors.request.use(
-//   (config) => {
-//     const token = getToken();
-//     if (token) {
-//       config.headers['Authorization'] = `Bearer ${token}`;
-//     }
-//     return config;
-//   },
-//   (error) => Promise.reject(error)
-// );
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = getToken();
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 // Refresh token jika 403
-// axiosInstance.interceptors.response.use(
-//   (response) => response,
-//   async (error) => {
-//     const originalRequest = error.config;
-//     if (error.response?.status === 403 && !originalRequest._retry) {
-//       originalRequest._retry = true;
-//       const newAccessToken = await getNewAccessToken();
-//       originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
-//       return axiosInstance(originalRequest);
-//     }
-//     return Promise.reject(error);
-//   }
-// );
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response?.status === 403 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      const newAccessToken = await getNewAccessToken();
+      originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+      return axiosInstance(originalRequest);
+    }
+    return Promise.reject(error);
+  }
+);
 
 
 // VIDEO API
@@ -161,5 +161,66 @@ export const getVideosBySlug = async (slug) => {
   const response = await axiosInstance.get(`/channels/${slug}/videos`);
   return response.data;
 };
+
+// ==========================
+// USER API
+// ==========================
+
+// Register user
+export const registerUser = async (data) => {
+  const response = await axiosInstance.post("/users/register", data);
+  return response.data;
+};
+
+// Login user
+export const loginUser = async (data) => {
+  const response = await axiosInstance.post("/users/login", data);
+  return response.data;
+};
+
+// Logout user
+export const logoutUser = async () => {
+  const response = await axiosInstance.delete("/logout");
+  return response.data;
+};
+
+// Get user by ID
+export const getUserById = async (id) => {
+  const response = await axiosInstance.get(`/users/${id}`);
+  return response.data;
+};
+
+// Get user profile by ID
+export const getUserProfile = async (id) => {
+  const response = await axiosInstance.get(`/users/profile/${id}`);
+  return response.data;
+};
+
+// Delete user
+export const deleteUser = async (id) => {
+  const response = await axiosInstance.delete(`/users/${id}`);
+  return response.data;
+};
+
+// Update username
+export const updateUsername = async (id, data) => {
+  const response = await axiosInstance.put(`/users/${id}/username`, data);
+  return response.data;
+};
+
+// Upload profile picture
+export const uploadProfilePic = async (id, file) => {
+  const formData = new FormData();
+  formData.append("profile_pic", file);
+
+  const response = await axiosInstance.post(`/users/${id}/profile-picture`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return response.data;
+};
+
 
 export default axiosInstance;
