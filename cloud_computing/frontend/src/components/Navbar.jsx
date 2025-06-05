@@ -9,7 +9,7 @@ const TopNavbar = ({ onToggleSidebar }) => {
         <Button variant="outline-light" onClick={onToggleSidebar} className="me-3">
           <FaBars />
         </Button>
-        <Navbar.Brand>YouTube Clone</Navbar.Brand>
+        <Navbar.Brand>YouClube</Navbar.Brand>
       </Container>
     </Navbar>
   );

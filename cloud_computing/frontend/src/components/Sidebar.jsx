@@ -33,15 +33,6 @@ const Sidebar = () => {
         <Nav.Link onClick={() => navigate('/studio')}>
           <FaFire className="me-2" /> Studio
         </Nav.Link>
-        <Nav.Link onClick={() => navigate('/music')}>
-          <FaMusic className="me-2" /> Music
-        </Nav.Link>
-        <Nav.Link onClick={() => navigate('/gaming')}>
-          <FaGamepad className="me-2" /> Gaming
-        </Nav.Link>
-        <Nav.Link onClick={() => navigate('/movies')}>
-          <FaFilm className="me-2" /> Movies
-        </Nav.Link>
       </Nav>
 
       <div className="p-3 border-top">

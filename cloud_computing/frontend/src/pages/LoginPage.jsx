@@ -24,7 +24,7 @@ const LoginPage = () => {
 
             navigate("/home");
         } catch (error) {
-            console.error("Login gagal:", error.response?.data || error.message);
+            console.error("Login gagal: password atau email salah");
       alert("Login gagal: " + (error.response?.data?.message || error.message));
         }
         console.log("Email: ",email);
