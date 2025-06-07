@@ -12,8 +12,8 @@ import { comparePassword } from "../services/serviceAuth.js";
 import { 
     uploadFileToGCS,
     deleteFileFromGCS
-} from "../services/uploadToGCS.js"; // pastikan path sesuai
-import { storage } from "../configDatabase/gcsClient.js";
+} from "../lib/uploadToGCS.js"; // pastikan path sesuai
+import { storage } from "../lib/gcsClient.js";
 
 const bucketName = process.env.GCS_BUCKET_NAME;
 
@@ -107,9 +107,24 @@ async function registerUser(req, res) {
 async function loginUser(req, res) {
     const { email, password } = req.body;
 
+    // 📌 Validasi input awal
+    if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required" });
+    }
+
     try {
         const user = await User.findOne({ where: { email } });
-        if (!user || !(await comparePassword(password, user.password))) {
+
+        if (!user) {
+            return res.status(401).json({ error: "Invalid email or password" });
+        }
+
+        // if (!user || !(await comparePassword(password, user.password))) {
+        //     return res.status(401).json({ error: "Invalid email or password" });
+        // }
+         // 🔐 Bandingkan password dengan bcrypt
+        const passwordMatch = await comparePassword(password, user.password);
+        if (!passwordMatch) {
             return res.status(401).json({ error: "Invalid email or password" });
         }
 
@@ -117,7 +132,8 @@ async function loginUser(req, res) {
             id: user.id,
             username: user.username,
             email: user.email,
-            slug: user.slug
+            slug: user.slug,
+            profile_pic: user.profile_pic   // ✔️ bisa digunakan di frontend
         };
 
         const accessToken = jwt.sign(
@@ -131,7 +147,7 @@ async function loginUser(req, res) {
             userData, 
             process.env.REFRESH_TOKEN_SECRET, 
             { 
-                expiresIn: "1d" 
+                expiresIn: "1h" 
             }
         );
 
@@ -146,7 +162,7 @@ async function loginUser(req, res) {
             httpOnly: true,
             sameSite: "Strict", // bisa diubah jadi "Lax" jika diakses dari frontend
             secure: false,      // true jika deploy pakai HTTPS
-            maxAge: 24 * 60 * 60 * 1000 // 1 hari
+            maxAge: 60 * 60 * 1000// 1 jam
         });
 
         res.status(200).json({
@@ -160,17 +176,54 @@ async function loginUser(req, res) {
     }
 }
 
+// async function logoutUser(req, res) {
+//     try {
+//         const refreshToken = req.cookies.refreshToken;
+//         if (!refreshToken) return res.sendStatus(204); // No Content
+
+//         const user = await User.findOne({ where: { refresh_token: refreshToken } });
+//         if (!user) return res.sendStatus(204); // Tidak ditemukan juga tidak masalah
+
+//         await User.update({ refresh_token: null }, { where: { id: user.id } });
+
+//         res.clearCookie("refreshToken");
+//         return res.status(200).json({ message: "Logout berhasil" });
+//     } catch (err) {
+//         console.error("[LOGOUT-ERROR]", err.message);
+//         return res.status(500).json({ error: "Internal server error" });
+//     }
+// }
 async function logoutUser(req, res) {
     try {
         const refreshToken = req.cookies.refreshToken;
-        if (!refreshToken) return res.sendStatus(204); // No Content
+        if (!refreshToken) {
+            return res.status(204).json({ message: "No refresh token provided" });
+        }
 
         const user = await User.findOne({ where: { refresh_token: refreshToken } });
-        if (!user) return res.sendStatus(204); // Tidak ditemukan juga tidak masalah
+        if (!user) {
+            res.clearCookie("refreshToken", {
+                httpOnly: true,
+                sameSite: "Strict", // harus match saat set cookie
+                secure: false       // sesuaikan jika sudah pakai HTTPS
+            });
+            return res.status(204).json({ message: "No matching user found" });
+        }
 
-        await User.update({ refresh_token: null }, { where: { id: user.id } });
+        // Hapus refresh token dari DB
+        await User.update(
+            { refresh_token: null },
+            { where: { id: user.id } }
+        );
 
-        res.clearCookie("refreshToken");
+        // Clear cookie
+        res.clearCookie("refreshToken", {
+            httpOnly: true,
+            sameSite: "Strict",
+            secure: false
+        });
+
+        console.log(`[LOGOUT] User ID ${user.id} (${user.email}) telah logout`);
         return res.status(200).json({ message: "Logout berhasil" });
     } catch (err) {
         console.error("[LOGOUT-ERROR]", err.message);
@@ -178,20 +231,43 @@ async function logoutUser(req, res) {
     }
 }
 
+// async function getUserById(req, res) {
+//     const { user_id } = req.params;
+
+//     try {
+//         const user = await User.findByPk(user_id, {
+//             attributes: ['id', 'username', 'email', 'profile_pic']
+//         });
+
+//         if (!user) return res.status(404).json({ error: "User not found" });
+
+//         res.status(200).json(user);
+//     } catch (error) {
+//         console.error(`[GET-USER-ERROR] ${error.message}`);
+//         res.status(500).json({ error: "Failed to get user details" });
+//     }
+// }
 async function getUserById(req, res) {
     const { user_id } = req.params;
+
+    if (!user_id || isNaN(user_id)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+    }
 
     try {
         const user = await User.findByPk(user_id, {
             attributes: ['id', 'username', 'email', 'profile_pic']
         });
 
-        if (!user) return res.status(404).json({ error: "User not found" });
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
 
-        res.status(200).json(user);
+        // console.log(`[GET-USER] ID: ${user.id}, Username: ${user.username}`);
+        return res.status(200).json({ user });
     } catch (error) {
         console.error(`[GET-USER-ERROR] ${error.message}`);
-        res.status(500).json({ error: "Failed to get user details" });
+        return res.status(500).json({ error: "Failed to get user details" });
     }
 }
 
@@ -222,9 +298,34 @@ async function deleteUser(req, res) {
     }
 }
 
+// async function updateUsername(req, res) {
+//     const { user_id } = req.params;
+//     const { username } = req.body;
+
+//     if (!username || username.trim() === "") {
+//         return res.status(400).json({ error: "Username is required" });
+//     }
+
+//     try {
+//         const user = await User.findByPk(user_id);
+//         if (!user) return res.status(404).json({ error: "User not found" });
+
+//         user.username = username;
+//         await user.save();
+
+//         res.status(200).json({ message: "Username updated successfully", username });
+//     } catch (error) {
+//         console.error(`[UPDATE-USERNAME-ERROR] ${error.message}`);
+//         res.status(500).json({ error: "Failed to update username" });
+//     }
+// }
 async function updateUsername(req, res) {
     const { user_id } = req.params;
     const { username } = req.body;
+
+    if (!user_id || isNaN(user_id)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+    }
 
     if (!username || username.trim() === "") {
         return res.status(400).json({ error: "Username is required" });
@@ -234,15 +335,21 @@ async function updateUsername(req, res) {
         const user = await User.findByPk(user_id);
         if (!user) return res.status(404).json({ error: "User not found" });
 
-        user.username = username;
+        user.username = username.trim();
         await user.save();
 
-        res.status(200).json({ message: "Username updated successfully", username });
+        console.log(`[UPDATE USERNAME] ID ${user_id} -> ${user.username}`);
+
+        res.status(200).json({
+            message: "Username updated successfully",
+            username: user.username
+        });
     } catch (error) {
         console.error(`[UPDATE-USERNAME-ERROR] ${error.message}`);
         res.status(500).json({ error: "Failed to update username" });
     }
 }
+
 
 // async function uploadProfilePic(req, res) {
 //     const user_id = req.params.user_id;
@@ -390,21 +497,45 @@ async function uploadProfilePic(req, res) {
     }
 }
 
+// async function getUserProfile(req, res) {
+//     const { user_id } = req.params;
+
+//     try {
+//         const user = await User.findByPk(user_id, {
+//             attributes: ["id", "username", "email", "profile_pic", "created_at"]
+//         });
+
+//         if (!user) return res.status(404).json({ error: "User not found" });
+
+//         console.log(`[GET-USER] User ID: ${user.id}, Username: ${user.username}`);
+//         res.status(200).json(user);
+//     } catch (error) {
+//         console.error(`[GET-USER-ERROR] ${error.message}`);
+//         res.status(500).json({ error: error.message });
+//     }
+// }
+
 async function getUserProfile(req, res) {
     const { user_id } = req.params;
+
+    if (!user_id || isNaN(user_id)) {
+        return res.status(400).json({ error: "Invalid user ID" });
+    }
 
     try {
         const user = await User.findByPk(user_id, {
             attributes: ["id", "username", "email", "profile_pic", "created_at"]
         });
 
-        if (!user) return res.status(404).json({ error: "User not found" });
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
 
         console.log(`[GET-USER] User ID: ${user.id}, Username: ${user.username}`);
         res.status(200).json(user);
     } catch (error) {
         console.error(`[GET-USER-ERROR] ${error.message}`);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: "Internal server error" });
     }
 }
 
@@ -479,12 +610,29 @@ async function deleteProfilePic(req, res) {
 
         // Ambil path objek dari URL
         const fileUrl = user.profile_pic;
+
+        // ✅ Validasi dasar untuk keamanan (optional tapi berguna)
+        if (!fileUrl.includes(bucketName)) {
+            return res.status(400).json({ error: "Invalid profile picture path" });
+        }
+
+        
+        // 🔍 Ambil path objek dari URL
         const parsedPath = new URL(fileUrl).pathname; // e.g. /bucket-name/users/123/uploadedUserPhotoProfile/file.jpg
         const objectPath = parsedPath.replace(`/${bucketName}/`, ""); // hasil: users/123/uploadedUserPhotoProfile/file.jpg
 
-        // Hapus file dari GCS
-        await storage.bucket(bucketName).file(objectPath).delete();
-        console.log(`[GCS] Deleted profile pic: ${objectPath}`);
+        // // Hapus file dari GCS
+        // await storage.bucket(bucketName).file(objectPath).delete();
+        // console.log(`[GCS] Deleted profile pic: ${objectPath}`);
+
+        // 🧹 Hapus file dari GCS (dengan error handling tambahan)
+        try {
+            await storage.bucket(bucketName).file(objectPath).delete();
+            console.log(`[GCS] Deleted profile pic: ${objectPath}`);
+        } catch (gcsErr) {
+            console.warn(`[GCS WARNING] Gagal hapus file: ${gcsErr.message}`);
+            // Tetap lanjut karena ini bukan error kritis
+        }
 
         // Update database
         user.profile_pic = null;

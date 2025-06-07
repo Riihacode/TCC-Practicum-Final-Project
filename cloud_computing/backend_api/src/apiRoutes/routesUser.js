@@ -19,11 +19,8 @@ const router = express.Router();
 
 router.post("/users/register", registerUser);
 router.post("/users/login", loginUser);
-// router.delete("/users/logout", logoutUser);
 router.delete("/users/logout", verifyToken, logoutUser);
 router.get("/users/:user_id", getUserById);  // Tambahan route GET
-// router.delete("/users/:user_id", deleteUser);
-// router.put("/users/:user_id/username", updateUsername);
 router.delete("/users/:user_id", verifyToken, checkUserIdMatch, deleteUser);
 router.put("/users/:user_id/username", verifyToken, checkUserIdMatch, updateUsername);
 

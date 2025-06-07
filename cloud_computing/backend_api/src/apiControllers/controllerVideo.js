@@ -10,8 +10,9 @@ import Busboy from "busboy";
 import {
     uploadFileToGCS,
     deleteFileFromGCS
-} from "../services/uploadToGCS.js";
-import { storage } from "../configDatabase/gcsClient.js";
+} from "../lib/uploadToGCS.js";
+import { storage } from "../lib/gcsClient.js";
+import redis from "../lib/redisClient.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -74,21 +75,21 @@ const bucketName = process.env.GCS_BUCKET_NAME;
 //         const user = await User.findByPk(user_id);
 //         if (!user) return res.status(404).json({ error: "User not found" });
 
-//         const buffer = Buffer.concat(fileBuffer);
-//         const sanitized = filename.replace(/\s+/g, "_");
-//         const finalFilename = `${Date.now()}-${sanitized}`;
-//         const uploadDir = path.join(
-//             process.cwd(),
-//             "public",
-//             "upload",
-//             "users",
-//             user_id.toString(),
-//             "uploadedVideo"
-//         );
-//         fs.mkdirSync(uploadDir, { recursive: true });
+        // const buffer = Buffer.concat(fileBuffer);
+        // const sanitized = filename.replace(/\s+/g, "_");
+        // const finalFilename = `${Date.now()}-${sanitized}`;
+        // const uploadDir = path.join(
+        //     process.cwd(),
+        //     "public",
+        //     "upload",
+        //     "users",
+        //     user_id.toString(),
+        //     "uploadedVideo"
+        // );
+        // fs.mkdirSync(uploadDir, { recursive: true });
 
-//         const savePath = path.join(uploadDir, finalFilename);
-//         const video_url = `/upload/users/${user_id}/uploadedVideo/${finalFilename}`;
+        // const savePath = path.join(uploadDir, finalFilename);
+        // const video_url = `/upload/users/${user_id}/uploadedVideo/${finalFilename}`;
 //         const timestamp = moment.utc().format("YYYY-MM-DD HH:mm:ss");
 
 //         fs.writeFileSync(savePath, buffer);
@@ -117,6 +118,7 @@ async function uploadVideo(req, res) {
         });
     }
 
+    const allowedExtensions = [".mp4", ".mov", ".avi", ".webm", ".mkv"];
     const busboy = Busboy({ headers: req.headers });
 
     let fileBuffer = [];
@@ -124,7 +126,8 @@ async function uploadVideo(req, res) {
     let fileReceived = false;
     let uploadError = null;
     let videoTitle = "";
-
+    let videoDescription = ""; 
+    
     const parseForm = () =>
         new Promise((resolve, reject) => {
             busboy.on("file", (fieldname, file, info) => {
@@ -136,15 +139,21 @@ async function uploadVideo(req, res) {
                     return;
                 }
 
+                const ext = path.extname(fname).toLowerCase();
+                if (!allowedExtensions.includes(ext)) {
+                    uploadError = `Invalid file type. Allowed: ${allowedExtensions.join(", ")}`;
+                    file.resume();
+                    return;
+                }
+
                 filename = fname;
                 fileReceived = true;
                 file.on("data", (chunk) => fileBuffer.push(chunk));
             });
 
             busboy.on("field", (name, value) => {
-                if (name === "title") {
-                    videoTitle = value;
-                }
+                if (name === "title") videoTitle = value;
+                if (name === "description") videoDescription = value;
             });
 
             busboy.on("finish", resolve);
@@ -157,7 +166,15 @@ async function uploadVideo(req, res) {
         await parseForm();
 
         if (uploadError) return res.status(400).json({ error: uploadError });
-        if (!fileReceived) return res.status(400).json({ error: "No video file uploaded" });
+        // if (!fileReceived) return res.status(400).json({ error: "No video file uploaded" });
+        if (!fileReceived || !videoTitle || isNaN(user_id)) {
+            return res.status(400).json({
+                error: "Required fields are missing or invalid",
+            });
+        }
+
+        const user = await User.findByPk(user_id);
+        if (!user) return res.status(404).json({ error: "User not found" });
 
         const sanitized = filename.replace(/\s+/g, "_");
         const finalFilename = `${Date.now()}-${sanitized}`;
@@ -172,9 +189,12 @@ async function uploadVideo(req, res) {
         const newVideo = await Video.create({
             user_id,
             title: videoTitle,
-            url: videoUrl,
-            // tambahkan field lain seperti `createdAt`, `thumbnail`, dll sesuai model kamu
+            description: videoDescription,
+            video_url: videoUrl,
+            uploaded_at: new Date(),
         });
+
+        // await redis.del("videos:all");   // penggunaan redis
 
         return res.status(201).json({
             message: "Video uploaded successfully",
@@ -186,6 +206,24 @@ async function uploadVideo(req, res) {
     }
 }
 
+// async function getAllVideos(req, res) {
+//     try {
+//         const videos = await Video.findAll({
+//             include: { 
+//                 model: User, 
+//                 as: "user",
+//                 attributes: ['username', 'slug', 'profile_pic'] 
+//             },
+//             attributes: ['id', 'title', 'description', 'video_url', 'thumbnail_url', 'uploaded_at']
+//         });
+//         res.status(200).json({ videos });
+//     } catch (error) {
+//         console.error(`[GET-ALL-VIDEOS-ERROR] ${error.message}`);
+//         res.status(500).json({ error: error.message });
+//     }
+// }
+
+
 async function getAllVideos(req, res) {
     try {
         const videos = await Video.findAll({
@@ -194,14 +232,48 @@ async function getAllVideos(req, res) {
                 as: "user",
                 attributes: ['username', 'slug', 'profile_pic'] 
             },
-            attributes: ['id', 'title', 'description', 'video_url', 'thumbnail_url', 'uploaded_at']
+            attributes: ['id', 'title', 'description', 'video_url', 'thumbnail_url', 'uploaded_at'],
+            order: [['uploaded_at', 'DESC']],  // Tampilkan video terbaru dulu
+            limit: 50                          // (opsional) batasi data default
         });
+
         res.status(200).json({ videos });
     } catch (error) {
         console.error(`[GET-ALL-VIDEOS-ERROR] ${error.message}`);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: "Internal server error" });
     }
 }
+
+// UNTUK PENGGUNAAN REDIS
+// async function getAllVideos(req, res) {
+//     const cacheKey = "videos:all";
+
+//     try {
+//         // Cek cache terlebih dahulu
+//         const cached = await redis.get(cacheKey);
+//         if (cached) {
+//             return res.status(200).json({ videos: JSON.parse(cached), cached: true });
+//         }
+
+//         // Ambil dari database jika tidak ada cache
+//         const videos = await Video.findAll({
+//             include: {
+//                 model: User,
+//                 as: "user",
+//                 attributes: ['username', 'slug', 'profile_pic']
+//             },
+//             attributes: ['id', 'title', 'description', 'video_url', 'thumbnail_url', 'uploaded_at']
+//         });
+
+//         // Simpan ke Redis (TTL 60 detik bisa diatur sesuai kebutuhan)
+//         await redis.set(cacheKey, JSON.stringify(videos), 'EX', 60);
+
+//         res.status(200).json({ videos, cached: false });
+//     } catch (error) {
+//         console.error(`[GET-ALL-VIDEOS-ERROR] ${error.message}`);
+//         res.status(500).json({ error: "Internal server error" });
+//     }
+// }
 
 // async function deleteVideo(req, res) {
 //     const { video_id } = req.params;
@@ -222,42 +294,91 @@ async function getAllVideos(req, res) {
 //         res.status(500).json({ error: error.message });
 //     }
 // }
+// async function deleteVideo(req, res) {
+//     const { video_id } = req.params;
+
+//     try {
+//         const video = await Video.findByPk(video_id);
+//         if (!video) {
+//             return res.status(404).json({ error: "Video not found" });
+//         }
+
+//         // ✅ Hapus file video di GCS
+//         if (video.video_url) {
+//             const parsedPath = new URL(video.video_url).pathname; // contoh: /dynamic-folder-file/users/123/uploadedVideo/file.mp4
+//             const objectPath = parsedPath.replace(`/${bucketName}/`, ""); // hasil: users/123/uploadedVideo/file.mp4
+
+//             await storage.bucket(bucketName).file(objectPath).delete();
+//             console.log(`[GCS] Deleted video: ${objectPath}`);
+//         }
+
+//         // ✅ Jika thumbnail juga ada, hapus juga
+//         if (video.thumbnail_url) {
+//             const parsedThumbPath = new URL(video.thumbnail_url).pathname;
+//             const thumbnailPath = parsedThumbPath.replace(`/${bucketName}/`, "");
+
+//             await storage.bucket(bucketName).file(thumbnailPath).delete();
+//             console.log(`[GCS] Deleted thumbnail: ${thumbnailPath}`);
+//         }
+
+//         // 🗑️ Hapus data dari database
+//         await video.destroy();
+
+//         return res.status(200).json({ message: "Video and related thumbnail deleted" });
+//     } catch (error) {
+//         console.error("[DELETE-VIDEO-ERROR]", error.message);
+//         return res.status(500).json({ error: "Internal server error" });
+//     }
+// }
+
 async function deleteVideo(req, res) {
     const { video_id } = req.params;
 
     try {
         const video = await Video.findByPk(video_id);
-            if (!video) {
+        if (!video) {
             return res.status(404).json({ error: "Video not found" });
         }
 
-        // ✅ Hapus file video di GCS
+        // ✅ Hapus file video di GCS jika ada
         if (video.video_url) {
-            const parsedPath = new URL(video.video_url).pathname; // contoh: /dynamic-folder-file/users/123/uploadedVideo/file.mp4
-            const objectPath = parsedPath.replace(`/${bucketName}/`, ""); // hasil: users/123/uploadedVideo/file.mp4
-
-            await storage.bucket(bucketName).file(objectPath).delete();
-            console.log(`[GCS] Deleted video: ${objectPath}`);
+            try {
+                const parsedPath = new URL(video.video_url).pathname; // /bucket-name/users/...
+                const objectPath = parsedPath.split("/").slice(2).join("/"); // users/123/uploadedVideo/filename
+                await storage.bucket(bucketName).file(objectPath).delete();
+                console.log(`[GCS] Deleted video: ${objectPath}`);
+            } catch (err) {
+                console.warn(`[GCS] Failed to delete video file: ${err.message}`);
+            }
         }
 
-        // ✅ Jika thumbnail juga ada, hapus juga
+        // ✅ Hapus thumbnail di GCS jika ada
         if (video.thumbnail_url) {
-            const parsedThumbPath = new URL(video.thumbnail_url).pathname;
-            const thumbnailPath = parsedThumbPath.replace(`/${bucketName}/`, "");
-
-            await storage.bucket(bucketName).file(thumbnailPath).delete();
-            console.log(`[GCS] Deleted thumbnail: ${thumbnailPath}`);
+            try {
+                const parsedThumbPath = new URL(video.thumbnail_url).pathname;
+                const thumbObjectPath = parsedThumbPath.split("/").slice(2).join("/"); // users/123/uploadedVideoThumbnail/filename
+                await storage.bucket(bucketName).file(thumbObjectPath).delete();
+                console.log(`[GCS] Deleted thumbnail: ${thumbObjectPath}`);
+            } catch (err) {
+                console.warn(`[GCS] Failed to delete thumbnail file: ${err.message}`);
+            }
         }
 
-        // 🗑️ Hapus data dari database
+        // 🗑️ Hapus data video dari database
         await video.destroy();
 
-        return res.status(200).json({ message: "Video and related thumbnail deleted" });
+        // await redis.del("videos:all");   // untuk penggunaan redis
+
+        return res.status(200).json({
+            message: "Video and thumbnail deleted successfully",
+            video_id,
+        });
     } catch (error) {
         console.error("[DELETE-VIDEO-ERROR]", error.message);
         return res.status(500).json({ error: "Internal server error" });
     }
 }
+
 
 async function updateVideoMetadata(req, res) {
     const { video_id } = req.params;
@@ -282,6 +403,8 @@ async function updateVideoMetadata(req, res) {
         if (description) video.description = description;
 
         await video.save();
+
+        // await redis.del("videos:all");   // penggunaan redis
 
         res.status(200).json({
             message: "Video metadata updated",
@@ -383,7 +506,7 @@ async function uploadVideoThumbnail(req, res) {
     const contentType = req.headers["content-type"];
     if (!contentType || !contentType.startsWith("multipart/form-data")) {
         return res.status(400).json({
-        error: "Invalid or missing Content-Type. Expected multipart/form-data",
+            error: "Invalid or missing Content-Type. Expected multipart/form-data",
         });
     }
 
@@ -398,9 +521,17 @@ async function uploadVideoThumbnail(req, res) {
         new Promise((resolve, reject) => {
             busboy.on("file", (fieldname, file, info) => {
                 const { filename: fname, mimeType } = info;
-                
-                if (fieldname !== "thumbnail" || !mimeType.startsWith("image/")) {
+
+                if (fieldname !== "thumbnail_url" || !mimeType.startsWith("image/")) {
                     uploadError = "Only image files are allowed";
+                    file.resume();
+                    return;
+                }
+
+                // ✅ Validasi ekstensi file
+                const allowedExtensions = /\.(jpg|jpeg|png|webp)$/i;
+                if (!allowedExtensions.test(fname)) {
+                    uploadError = "Invalid file extension for thumbnail";
                     file.resume();
                     return;
                 }
@@ -409,56 +540,87 @@ async function uploadVideoThumbnail(req, res) {
                 fileReceived = true;
                 file.on("data", (chunk) => fileBuffer.push(chunk));
             });
-            
+
             busboy.on("finish", resolve);
             busboy.on("error", reject);
         });
 
-        req.pipe(busboy);
+    req.pipe(busboy);
 
-        try {
-            await parseForm();
+    try {
+        await parseForm();
 
-            if (uploadError) return res.status(400).json({ error: uploadError });
-            if (!fileReceived) return res.status(400).json({ error: "No thumbnail uploaded" });
+        if (uploadError) return res.status(400).json({ error: uploadError });
+        if (!fileReceived) return res.status(400).json({ error: "No thumbnail uploaded" });
 
-            const video = await Video.findByPk(video_id);
-            if (!video || video.user_id !== parseInt(user_id)) {
-                return res.status(404).json({ error: "Video not found or access denied" });
-            }
-
-            const sanitized = filename.replace(/\s+/g, "_");
-            const finalFilename = `${Date.now()}-${sanitized}`;
-
-            const thumbnailUrl = await uploadFileToGCS(
-                user_id,
-                "uploadedVideoThumbnail",
-                finalFilename,
-                Buffer.concat(fileBuffer)
-            );
-
-            video.thumbnail_url = thumbnailUrl;
-            await video.save();
-
-            return res.status(200).json({
-                message: "Thumbnail uploaded successfully",
-                thumbnail_url: thumbnailUrl,
-            });
-        } catch (err) {
-            console.error("[UPLOAD-THUMBNAIL-ERROR]", err.message);
-            return res.status(500).json({ error: "Internal server error" });
+        const video = await Video.findByPk(video_id);
+        if (!video || video.user_id !== parseInt(user_id)) {
+            return res.status(404).json({ error: "Video not found or access denied" });
         }
+
+        // ❌ Jangan lanjut jika thumbnail sudah ada
+        if (video.thumbnail_url) {
+            return res.status(409).json({ error: "Thumbnail already exists" });
+        }
+
+        const sanitized = filename.replace(/\s+/g, "_");
+        const finalFilename = `${Date.now()}-${sanitized}`;
+
+        const thumbnailUrl = await uploadFileToGCS(
+            user_id,
+            "uploadedVideoThumbnail",
+            finalFilename,
+            Buffer.concat(fileBuffer)
+        );
+
+        video.thumbnail_url = thumbnailUrl;
+        await video.save();
+
+        return res.status(200).json({
+            message: "Thumbnail uploaded successfully",
+            thumbnail_url: thumbnailUrl,
+        });
+    } catch (err) {
+        console.error("[UPLOAD-THUMBNAIL-ERROR]", err.message);
+        return res.status(500).json({ error: "Internal server error" });
+    }
 }
+
+// async function getVideoThumbnail(req, res) {
+//     const { video_id } = req.params;
+//     try {
+//         const video = await Video.findByPk(video_id);
+//         if (!video) return res.status(404).json({ error: "Video not found" });
+//         res.status(200).json(video);
+//     } catch (error) {
+//         console.error(`[GET-THUMBNAIL-ERROR] ${error.message}`);
+//         res.status(500).json({ error: error.message });
+//     }
+// }
 
 async function getVideoThumbnail(req, res) {
     const { video_id } = req.params;
+
+    // Validasi tipe data
+    if (isNaN(video_id)) {
+        return res.status(400).json({ error: "Invalid video ID" });
+    }
+
     try {
-        const video = await Video.findByPk(video_id);
-        if (!video) return res.status(404).json({ error: "Video not found" });
-        res.status(200).json(video);
+        const video = await Video.findByPk(video_id, {
+            attributes: ["thumbnail_url"]
+        });
+
+        if (!video) {
+            return res.status(404).json({ error: "Video not found" });
+        }
+
+        res.status(200).json({
+            thumbnail_url: video.thumbnail_url
+        });
     } catch (error) {
         console.error(`[GET-THUMBNAIL-ERROR] ${error.message}`);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: "Internal server error" });
     }
 }
 
@@ -479,6 +641,37 @@ async function getVideoThumbnail(req, res) {
 //         res.status(500).json({ error: error.message });
 //     }
 // }
+// async function deleteVideoThumbnail(req, res) {
+//     const { video_id } = req.params;
+
+//     try {
+//         const video = await Video.findByPk(video_id);
+//         if (!video) {
+//             return res.status(404).json({ error: "Video not found" });
+//         }
+
+//         if (!video.thumbnail_url) {
+//             return res.status(400).json({ error: "No thumbnail to delete" });
+//         }
+
+//         // ✅ Ambil path dari URL GCS thumbnail
+//         const parsedPath = new URL(video.thumbnail_url).pathname;
+//         const objectPath = parsedPath.replace(`/${bucketName}/`, "");
+
+//         // ✅ Hapus dari GCS
+//         await storage.bucket(bucketName).file(objectPath).delete();
+//         console.log(`[GCS] Deleted thumbnail: ${objectPath}`);
+
+//         // ✅ Hapus dari DB
+//         video.thumbnail_url = null;
+//         await video.save();
+
+//         return res.status(200).json({ message: "Thumbnail deleted" });
+//     } catch (error) {
+//         console.error(`[DELETE-THUMBNAIL-ERROR] ${error.message}`);
+//         return res.status(500).json({ error: "Internal server error" });
+//     }
+// }
 async function deleteVideoThumbnail(req, res) {
     const { video_id } = req.params;
 
@@ -492,24 +685,31 @@ async function deleteVideoThumbnail(req, res) {
             return res.status(400).json({ error: "No thumbnail to delete" });
         }
 
-        // ✅ Ambil path dari URL GCS thumbnail
-        const parsedPath = new URL(video.thumbnail_url).pathname;
-        const objectPath = parsedPath.replace(`/${bucketName}/`, "");
+        // ✅ Ambil filename dari URL
+        const urlPath = new URL(video.thumbnail_url).pathname;
+        const fileName = urlPath.split("/").pop(); // hanya ambil nama file saja
 
-        // ✅ Hapus dari GCS
-        await storage.bucket(bucketName).file(objectPath).delete();
-        console.log(`[GCS] Deleted thumbnail: ${objectPath}`);
+        if (!fileName) {
+            return res.status(400).json({ error: "Invalid thumbnail path" });
+        }
 
-        // ✅ Hapus dari DB
+        const user_id = video.user_id;
+        const folder = "uploadedVideoThumbnail";
+
+        // ✅ Gunakan helper yang sudah ada
+        await deleteFileFromGCS(user_id, folder, fileName);
+
+        // ✅ Kosongkan di database
         video.thumbnail_url = null;
         await video.save();
 
-        return res.status(200).json({ message: "Thumbnail deleted" });
+        return res.status(200).json({ message: "Thumbnail deleted successfully" });
     } catch (error) {
         console.error(`[DELETE-THUMBNAIL-ERROR] ${error.message}`);
         return res.status(500).json({ error: "Internal server error" });
     }
 }
+
 
 // async function updateVideoThumbnail(req, res) {
 //     const { video_id } = req.params;
@@ -589,7 +789,7 @@ async function updateVideoThumbnail(req, res) {
 
     const contentType = req.headers["content-type"];
     if (!contentType || !contentType.startsWith("multipart/form-data")) {
-            return res.status(400).json({
+        return res.status(400).json({
             error: "Invalid or missing Content-Type. Expected multipart/form-data",
         });
     }
@@ -606,8 +806,16 @@ async function updateVideoThumbnail(req, res) {
             busboy.on("file", (fieldname, file, info) => {
                 const { filename: fname, mimeType } = info;
 
-                if (fieldname !== "thumbnail_url" || !mimeType.startsWith("image/")) {
+                if (fieldname !== "thumbnail" || !mimeType.startsWith("image/")) {
                     uploadError = "Only image files are allowed";
+                    file.resume();
+                    return;
+                }
+
+                // ✅ Validasi ekstensi file
+                const allowedExtensions = /\.(jpg|jpeg|png|webp)$/i;
+                if (!allowedExtensions.test(fname)) {
+                    uploadError = "Invalid file extension for thumbnail";
                     file.resume();
                     return;
                 }
@@ -620,53 +828,59 @@ async function updateVideoThumbnail(req, res) {
             busboy.on("finish", resolve);
             busboy.on("error", reject);
         });
-        
-        req.pipe(busboy);
 
-        try {
-            await parseForm();
+    req.pipe(busboy);
 
-            if (uploadError)
-                return res.status(400).json({ error: uploadError });
-            if (!fileReceived)
-                return res.status(400).json({ error: "No thumbnail file uploaded" });
+    try {
+        await parseForm();
 
-            const video = await Video.findByPk(video_id);
-            if (!video) return res.status(404).json({ error: "Video not found" });
-
-            const user_id = video.user_id;
-
-            // 🔥 Hapus thumbnail lama dari GCS jika ada
-            if (video.thumbnail_url) {
-                const oldPath = new URL(video.thumbnail_url).pathname;
-                const bucketName = process.env.GCS_BUCKET_NAME;
-                const objectPath = oldPath.replace(`/${bucketName}/`, "");
-
-                await deleteFileFromGCS(user_id, "uploadedVideoThumbnail", objectPath.split("/").pop());
-            }
-
-            // 🚀 Upload thumbnail baru ke GCS
-            const sanitized = filename.replace(/\s+/g, "_");
-            const finalFilename = `${Date.now()}-${sanitized}`;
-
-            const newThumbnailUrl = await uploadFileToGCS(
-                user_id,
-                "uploadedVideoThumbnail",
-                finalFilename,
-                Buffer.concat(fileBuffer)
-            );
-
-            video.thumbnail_url = newThumbnailUrl;
-            await video.save();
-
-            return res.status(200).json({
-                message: "Thumbnail updated successfully",
-                thumbnail_url: newThumbnailUrl,
-            });
-        } catch (err) {
-            console.error("[UPDATE-THUMBNAIL-ERROR]", err.message);
-            return res.status(500).json({ error: "Internal server error" });
+        if (uploadError) return res.status(400).json({ error: uploadError });
+        if (!fileReceived || !filename) {
+            return res.status(400).json({ error: "No thumbnail file uploaded" });
         }
+
+        const video = await Video.findByPk(video_id);
+        if (!video) return res.status(404).json({ error: "Video not found" });
+
+        const user_id = video.user_id;
+
+        // 🔥 Hapus file lama dari GCS jika ada
+        if (video.thumbnail_url) {
+            try {
+                const parsedPath = new URL(video.thumbnail_url).pathname;
+                const objectPath = parsedPath.replace(`/${process.env.GCS_BUCKET_NAME}/`, "");
+                const parts = objectPath.split("/");
+                const oldFilename = parts[parts.length - 1];
+
+                await deleteFileFromGCS(user_id, "uploadedVideoThumbnail", oldFilename);
+            } catch (err) {
+                console.warn("[GCS-DELETE-THUMBNAIL-WARNING]", err.message);
+                // Tidak fatal, hanya log
+            }
+        }
+
+        // 🚀 Upload thumbnail baru
+        const sanitized = filename.replace(/\s+/g, "_");
+        const finalFilename = `${Date.now()}-${sanitized}`;
+        const newThumbnailUrl = await uploadFileToGCS(
+            user_id,
+            "uploadedVideoThumbnail",
+            finalFilename,
+            Buffer.concat(fileBuffer)
+        );
+
+        // Update DB
+        video.thumbnail_url = newThumbnailUrl;
+        await video.save();
+
+        return res.status(200).json({
+            message: "Thumbnail updated successfully",
+            thumbnail_url: newThumbnailUrl,
+        });
+    } catch (err) {
+        console.error("[UPDATE-THUMBNAIL-ERROR]", err.message);
+        return res.status(500).json({ error: "Internal server error" });
+    }
 }
 
 // async function getVideoId(req, res) {
