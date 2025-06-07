@@ -1,10 +1,12 @@
+import dotenv from "dotenv";
+// Memastikan .env terbaca sebelum file lain menggunakannya
+dotenv.config();
+
 import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
-
 import "./src/models/initModels.js"; // agar relasi aktif
-
 // Routes
 import routesUser from "./src/apiRoutes/routesUser.js";
 import routesVideo from "./src/apiRoutes/routesVideo.js";
@@ -41,3 +43,4 @@ app.use((req, res) => {
 
 // Jalankan server
 app.listen(3000, () => console.log("Server is running on http://localhost:3000"));
+// app.listen(5000, () => console.log("Server is running on http://localhost:5000"));
