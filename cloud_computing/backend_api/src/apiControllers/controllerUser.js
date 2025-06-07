@@ -161,7 +161,7 @@ async function loginUser(req, res) {
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
             sameSite: "Strict", // bisa diubah jadi "Lax" jika diakses dari frontend
-            secure: false,      // true jika deploy pakai HTTPS
+            secure: true,      // true jika deploy pakai HTTPS
             maxAge: 60 * 60 * 1000// 1 jam
         });
 
