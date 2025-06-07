@@ -1,12 +1,12 @@
 // TUNDA DULU
 
-// lib/redisClient.js
-// import Redis from "ioredis";
+lib/redisClient.js
+import Redis from "ioredis";
 
-// const redis = new Redis({
-//     host: process.env.REDIS_HOST || "127.0.0.1",
-//     port: process.env.REDIS_PORT || 6379,
-//     // password: process.env.REDIS_PASSWORD // jika pakai auth
-// });
+const redis = new Redis({
+    host: process.env.REDIS_HOST || "127.0.0.1",
+    port: process.env.REDIS_PORT || 6379,
+    // password: process.env.REDIS_PASSWORD // jika pakai auth
+});
 
-// export default redis;
+export default redis;
