@@ -39,9 +39,10 @@ steps:
         # "--port",
         # "3000",
         "--port",
-        "3000",
-        "--platform",
-        "managed",
+        # "3000",
+        "8080",
+        # "--platform",
+        # "managed",
         "--region",
         "us-central1",
         "--allow-unauthenticated"
