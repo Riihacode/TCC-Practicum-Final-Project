@@ -669,17 +669,17 @@ async function updateVideoThumbnail(req, res) {
         }
 }
 
-async function getVideoId(req, res) {
-    const { video_id } = req.params;
-    try {
-        const video = await Video.findByPk(video_id);
-        if (!video) return res.status(404).json({ error: "Video not found" });
-        res.status(200).json(video);
-    } catch (error) {
-        console.error(`[GET-VIDEO-DETAIL-ERROR] ${error.message}`);
-        res.status(500).json({ error: error.message });
-    }
-} 
+// async function getVideoId(req, res) {
+//     const { video_id } = req.params;
+//     try {
+//         const video = await Video.findByPk(video_id);
+//         if (!video) return res.status(404).json({ error: "Video not found" });
+//         res.status(200).json(video);
+//     } catch (error) {
+//         console.error(`[GET-VIDEO-DETAIL-ERROR] ${error.message}`);
+//         res.status(500).json({ error: error.message });
+//     }
+// } 
 async function getVideoId(req, res) {
     const { video_id } = req.params;
 
