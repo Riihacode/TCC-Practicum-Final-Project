@@ -24,7 +24,8 @@ steps:
     args: ["push", "gcr.io/$PROJECT_ID/backend-api-sosial-media:${SHORT_SHA}"]
 
   # ✅ Deploy ke Cloud Run (jika pakai Cloud Run, abaikan jika Compute Engine)
-  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+  # - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+  - name: "gcr.io/cloud-builders/gcloud"
     entrypoint: gcloud
     args:
       [
@@ -37,6 +38,8 @@ steps:
         "1000s",
         # "--port",
         # "3000",
+        "--port",
+        "3000",
         "--platform",
         "managed",
         "--region",
