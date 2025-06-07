@@ -12,7 +12,7 @@ import {
     deleteFileFromGCS
 } from "../lib/uploadToGCS.js";
 import { storage } from "../lib/gcsClient.js";
-import redis from "../lib/redisClient.js";
+// import redis from "../lib/redisClient.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

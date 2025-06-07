@@ -1,6 +1,4 @@
 // TUNDA DULU
-
-lib/redisClient.js
 import Redis from "ioredis";
 
 const redis = new Redis({
