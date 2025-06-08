@@ -58,7 +58,7 @@ return (
       }}
       >
       <div style={{ height: '180px', overflow: 'hidden' }}>
-        <Card.Img src={`${BASE_URL}${video.thumbnail_url}`} alt={video.title}
+        <Card.Img src={`${video.thumbnail_url}`} alt={video.title}
           style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
       </div>
       <Card.Body className="d-flex flex-column justify-content-between p-3" style={{ flex: 1 }}>

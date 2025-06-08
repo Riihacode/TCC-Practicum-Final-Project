@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Form, Spinner, Image, Container } from 'react-bootstrap';
 import { jwtDecode } from 'jwt-decode';
-import { getUserById, updateUsername, uploadProfilePic } from '../api';
+import { getUserById, updateUsername, uploadProfilePic, updateProfilePic, deleteProfilePic } from '../api';
 
-const BASE_URL = "http://localhost:3000/";
+const BASE_URL = "https://backend-api-sosial-media-872136705893.us-central1.run.app/";
 
 const Profile = () => {
   const [username, setUsername] = useState('');
@@ -13,6 +13,13 @@ const Profile = () => {
   const [previewPicUrl, setPreviewPicUrl] = useState(null);
   const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
+  const [savingUsername, setSavingUsername] = useState(false);
+  const [savingPhoto, setSavingPhoto] = useState(false);
+
+  console.log("username : ", username);
+  console.log("email : ", email);
+  console.log("profile_pic : ", profilePic);
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -25,9 +32,10 @@ const Profile = () => {
 
       getUserById(id)
         .then((data) => {
-          setUsername(data.username || '');
-          setEmail(data.email || '');
-          if (data.profile_pic) setProfilePic(data.profile_pic);
+          const user = data.user;
+          setUsername(user.username || '');
+          setEmail(user.email || '');
+          if (user.profile_pic) setProfilePic(user.profile_pic);
         })
         .catch((err) => {
           console.error("Gagal mengambil data user:", err);
@@ -46,26 +54,61 @@ const Profile = () => {
     }
   };
 
-  const handleSave = async () => {
-    if (!userId) return;
+  const handleDeleteProfilePic = async () => {
+    if (!userId || !profilePic) return;
+    if (!window.confirm("Yakin ingin menghapus foto profil?")) return;
 
     try {
-      if (username) {
-        await updateUsername(userId, { username });
-        alert("Username berhasil diperbarui");
-      }
+      setDeleting(true);
+      await deleteProfilePic(userId);
+      setProfilePic('');
+      setPreviewPicUrl(null);
+      setNewPicFile(null);
+      alert("Foto profil berhasil dihapus");
+    } catch (error) {
+      console.error("Gagal menghapus foto profil:", error);
+      alert("Gagal menghapus foto profil");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
-      if (newPicFile) {
+  const handleSaveUsername = async () => {
+    if (!userId) return;
+    try {
+      setSavingUsername(true);
+      await updateUsername(userId, { username });
+      alert("Username berhasil diperbarui");
+    } catch (error) {
+      console.error("Gagal memperbarui username:", error);
+      alert("Gagal memperbarui username");
+    } finally {
+      setSavingUsername(false);
+    }
+  };
+
+  const handleSaveProfilePic = async () => {
+    if (!userId || !newPicFile) return;
+
+    try {
+      setSavingPhoto(true);
+      if (profilePic) {
+        // update foto profil
+        const res = await updateProfilePic(userId, newPicFile);
+        setProfilePic(res.profilePicUrl || profilePic);
+      } else {
+        // upload foto profil baru
         const res = await uploadProfilePic(userId, newPicFile);
         setProfilePic(res.profilePicUrl || profilePic);
-        setNewPicFile(null);
-        setPreviewPicUrl(null);
       }
-
-      alert("Perubahan berhasil disimpan!");
+      setNewPicFile(null);
+      setPreviewPicUrl(null);
+      alert("Foto profil berhasil diperbarui");
     } catch (error) {
-      console.error("Gagal menyimpan perubahan:", error);
-      alert("Gagal menyimpan perubahan");
+      console.error("Gagal memperbarui foto profil:", error);
+      alert("Gagal memperbarui foto profil");
+    } finally {
+      setSavingPhoto(false);
     }
   };
 
@@ -81,9 +124,9 @@ const Profile = () => {
     <Container className="py-4" style={{ maxWidth: '600px' }}>
       <h3 className="text-light mb-4 text-center">Profil Saya</h3>
 
-      <div className="text-center mb-3">
+      <div className="position-relative text-center mb-3" style={{ width: 150, margin: '0 auto' }}>
         <Image
-          src={previewPicUrl || (profilePic ? `${BASE_URL}${profilePic}` : 'https://placehold.co/150x150?text=Foto')}
+          src={previewPicUrl || (profilePic ? `${profilePic}` : 'https://placehold.co/150x150?text=Foto')}
           roundedCircle
           style={{
             width: 150,
@@ -93,12 +136,44 @@ const Profile = () => {
             boxShadow: '0 0 10px rgba(0,0,0,0.5)'
           }}
         />
+        {profilePic && !newPicFile && (
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={handleDeleteProfilePic}
+            disabled={deleting}
+            style={{
+              position: 'absolute',
+              top: 5,
+              right: 5,
+              borderRadius: '50%',
+              padding: '5px 8px',
+              fontWeight: 'bold',
+              lineHeight: 1,
+              zIndex: 10,
+            }}
+            title="Hapus Foto Profil"
+          >
+            &times;
+          </Button>
+        )}
       </div>
 
-      <Form.Group className="mb-4 text-center">
+      <Form.Group className="mb-2 text-center">
         <Form.Label className="text-light">Ganti Foto Profil</Form.Label>
         <Form.Control type="file" accept="image/*" onChange={handleProfilePicChange} className="w-100" />
       </Form.Group>
+
+      <div className="d-grid mb-4">
+        <Button
+          variant="primary"
+          size="md"
+          onClick={handleSaveProfilePic}
+          disabled={!newPicFile || savingPhoto}
+        >
+          {savingPhoto ? "Menyimpan Foto..." : "Simpan Foto Profil"}
+        </Button>
+      </div>
 
       <Form>
         <Form.Group className="mb-3">
@@ -117,14 +192,16 @@ const Profile = () => {
         </Form.Group>
 
         <div className="d-grid">
-          <Button variant="warning" size="lg" onClick={handleSave} disabled={!username.trim()}>
-            💾 Simpan Perubahan
+          <Button
+            variant="warning"
+            size="lg"
+            onClick={handleSaveUsername}
+            disabled={!username.trim() || savingUsername}
+          >
+            {savingUsername ? "Menyimpan Username..." : "Simpan Username"}
           </Button>
         </div>
       </Form>
-
-      {/* Tabel data bisa kamu tambahkan di bawah sini */}
-      {/* <Table ... /> */}
     </Container>
   );
 };

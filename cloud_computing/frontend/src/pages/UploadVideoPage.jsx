@@ -18,22 +18,38 @@ const VideoUploadPage = () => {
   };
 
   return (
-    <div>
-      <Navbar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
-      <Container fluid>
-        <Row>
-          {sidebarOpen && (
-            <Col xs={2} className="bg-light min-vh-100 border-end p-0">
-              <Sidebar onSelectPage={setSelectedPage} /> {/* kirim callback */}
-            </Col>
-          )}
-          <Col className="p-3" style={{ marginTop: '56px' }}>
-            {renderContent()}
+  <div className="bg-dark text-light min-vh-100">
+    <Navbar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
+
+    <Container fluid className="pt-4">
+      <Row>
+        {sidebarOpen && (
+          <Col
+            xs={12}
+            md={3}
+            lg={2}
+            className="bg-secondary border-end border-dark min-vh-100 p-0"
+          >
+            <Sidebar onSelectPage={setSelectedPage} />
           </Col>
-        </Row>
-      </Container>
-    </div>
-  );
+        )}
+
+        <Col
+          className="p-4"
+          style={{
+            marginTop: '56px',
+            backgroundColor: '#1c1c1c',
+            borderRadius: '8px',
+            boxShadow: '0 0 10px rgba(255,255,255,0.05)',
+          }}
+        >
+          {renderContent()}
+        </Col>
+      </Row>
+    </Container>
+  </div>
+);
+
 };
 
 export default VideoUploadPage;

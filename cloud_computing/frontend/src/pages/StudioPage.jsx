@@ -11,22 +11,37 @@ const StudioPage = () => {
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   return (
-    <div>
-      <AppNavbar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
-      <Container fluid>
-        <Row>
-          {sidebarOpen && (
-            <Col xs={2} className="bg-light min-vh-100 border-end p-0">
-              <Sidebar />
-            </Col>
-          )}
-          <Col className="p-3" style={{ marginTop: '56px' }}>
-            <Studio />
+  <div style={{ backgroundColor: '#000', minHeight: '100vh', color: '#FFD700' }}>
+    <AppNavbar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
+    <Container fluid>
+      <Row>
+        {sidebarOpen && (
+          <Col
+            xs={2}
+            className="min-vh-100 border-end p-0"
+            style={{
+              backgroundColor: '#1c1c1c',
+              borderRight: '1px solid #FFD700',
+              color: '#FFD700',
+            }}
+          >
+            <Sidebar />
           </Col>
-        </Row>
-      </Container>
-    </div>
-  );
-};
+        )}
+        <Col
+          className="p-3"
+          style={{
+            marginTop: '56px',
+            backgroundColor: '#1c1c1c',
+            color: '#FFD700',
+          }}
+        >
+          <Studio />
+        </Col>
+      </Row>
+    </Container>
+  </div>
+);
+}
 
 export default StudioPage;

@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 // export const API_URL = 'https://be-sosial-media-872136705893.us-central1.run.app/api';
-export const API_URL = 'http://localhost:3000/api';
+// export const API_URL = 'http://localhost:3000/api';
+export const API_URL = 'https://backend-api-sosial-media-872136705893.us-central1.run.app/api';
 
 // Ambil token dari localStorage
 const getToken = () => localStorage.getItem('accessToken');
@@ -17,9 +18,11 @@ export const getNewAccessToken = async () => {
     return accessToken;
   } catch (error) {
     console.error("Gagal refresh token", error);
-    window.location.href = "/home";
+    localStorage.removeItem('accessToken');
+    window.location.href = "/"; // Jangan ke /home, lebih baik langsung ke login
   }
 };
+
 
 // Buat axios instance
 const axiosInstance = axios.create({
@@ -41,20 +44,25 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Refresh token jika 403
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    if (error.response?.status === 403 && !originalRequest._retry) {
-      originalRequest._retry = true;
+axiosInstance.interceptors.response.use(null, async (error) => {
+  const originalRequest = error.config;
+
+  if (error.response?.status === 401 && !originalRequest._retry) {
+    originalRequest._retry = true;
+
+    try {
       const newAccessToken = await getNewAccessToken();
       originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
       return axiosInstance(originalRequest);
+    } catch (refreshError) {
+      return Promise.reject(refreshError);
     }
-    return Promise.reject(error);
   }
-);
+
+  return Promise.reject(error);
+});
+
+
 
 
 // VIDEO API
@@ -62,7 +70,7 @@ axiosInstance.interceptors.response.use(
 // Upload video
 export const uploadVideo = async (userId, file, title = "", description = "") => {
   const formData = new FormData();
-  formData.append("video_url", file);
+  formData.append("video_file", file); // ✅ sesuai backend
   if (title) formData.append("title", title);
   if (description) formData.append("description", description);
 
@@ -74,6 +82,7 @@ export const uploadVideo = async (userId, file, title = "", description = "") =>
 
   return response.data;
 };
+
 
 
 // Get all videos
@@ -180,10 +189,15 @@ export const loginUser = async (data) => {
   return response.data;
 };
 
-// Logout user
+// Logout User
 export const logoutUser = async () => {
-  const response = await axiosInstance.delete("/users/logout");
-  return response.data;
+  try {
+    const response = await axiosInstance.delete("/users/logout");
+    return response.data;
+  } catch (error) {
+    console.error("Logout failed:", error.response?.data || error.message);
+    throw error;
+  }
 };
 
 // Get user by ID
@@ -223,6 +237,27 @@ export const uploadProfilePic = async (id, file) => {
 
   return response.data;
 };
+
+// Update profile picture
+export const updateProfilePic = async (id, file) => {
+  const formData = new FormData();
+  formData.append("profile_pic", file);
+
+  const response = await axiosInstance.put(`/users/${id}/profile-picture`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return response.data;
+};
+
+// Delete profile picture
+export const deleteProfilePic = async (id) => {
+  const response = await axiosInstance.delete(`/users/${id}/profile-picture`);
+  return response.data;
+};
+
 
 
 export default axiosInstance;
