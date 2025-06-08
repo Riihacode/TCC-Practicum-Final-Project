@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-export const API_URL = 'https://be-sosial-media-872136705893.us-central1.run.app/api'; // Ganti sesuai environment
+// export const API_URL = 'https://be-sosial-media-872136705893.us-central1.run.app/api';
+export const API_URL = 'http://localhost:3000/api';
 
 // Ambil token dari localStorage
 const getToken = () => localStorage.getItem('accessToken');

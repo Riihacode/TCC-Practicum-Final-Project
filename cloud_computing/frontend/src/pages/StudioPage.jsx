@@ -6,6 +6,7 @@ import Studio from '../components/Studio';
 
 const StudioPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 

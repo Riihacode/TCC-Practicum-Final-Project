@@ -18,7 +18,10 @@ const ProfilePage = () => {
   };
 
   return (
-    <div>
+    <div style={{ 
+      backgroundColor:"#1c1c1c",
+      height: "100vh"
+       }}>
       <Navbar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
       <Container fluid>
         <Row>

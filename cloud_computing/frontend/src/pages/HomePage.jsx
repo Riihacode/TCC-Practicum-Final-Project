@@ -22,7 +22,8 @@ const HomePage = () => {
   };
 
   return (
-    <div>
+    <div style=
+    {{ backgroundColor: "#1c1c1c" }}>
       <Navbar onToggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
       <Container fluid>
         <Row>
