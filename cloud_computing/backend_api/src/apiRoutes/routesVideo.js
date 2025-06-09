@@ -28,24 +28,26 @@ console.log(typeof uploadVideo);            // Harus "function"
 console.log(typeof validateUserId);         // Harus "function"
 console.log(typeof upload.single);          // Harus "function"
 
-// Content Creator
+
+// [ CONTENT CREATOR ]
+// Video
 router.post("/users/:user_id/videos", verifyToken, checkUserIdMatch, videoUploadLimiter, uploadVideo);
 router.put("/videos/:video_id", verifyToken, checkVideoOwnership, updateVideoMetadata);
-router.post("/users/:user_id/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, validateVideoId, uploadVideoThumbnail);
-router.put("/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, validateVideoId, updateVideoThumbnail);
-router.get("/videos/:video_id/thumbnail", validateVideoId, getVideoThumbnail);
-router.delete("/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, validateVideoId, deleteVideoThumbnail);
 router.delete("/videos/:video_id", verifyToken, checkVideoOwnership, validateVideoId, deleteVideo);
 
-// Viewer
-// router.get("/videos", syncVideosWithStorage, getAllVideos);
-router.get("/videos", getAllVideos);
-router.get("/videos/:video_id", validateVideoId, getVideoId);
+// Thumbnail
+router.post("/users/:user_id/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, validateVideoId, uploadVideoThumbnail);
+router.put("/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, validateVideoId, updateVideoThumbnail);
+router.delete("/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, validateVideoId, deleteVideoThumbnail);
+router.get("/videos/:video_id/thumbnail", validateVideoId, getVideoThumbnail);  // untuk memudahkan content creator untuk mengecek thumbnail sebelumnya untuk memutuskan akan diganti atau tidak
+
+// [ VIEWER ]
+// Videos
+router.get("/videos", getAllVideos);    // Get seluruh video yang nanti ditampilkan di homepage
+router.get("/videos/:video_id", validateVideoId, getVideoId);   // Get suatu video ketika viewer mengeklik salah satu video-nya
+
 // Channel
-// router.get("/users/slug/:slug", getUserBySlug); // untuk profil publik
-router.get("/channels/:slug/profile", getUserBySlug);
-// Public: Videos by slug (akses oleh viewer biasa)
-// router.get("/channels/:slug/videos", syncVideosWithStorage, getVideosBySlug);
-router.get("/channels/:slug/videos", getVideosBySlug);
+router.get("/channels/:slug/videos", getVideosBySlug);  // Get seluruh video ketika menekan suatu channel
+router.get("/channels/:slug/profile", getUserBySlug);   // untuk profil channel publik ketika dicek viewer
 
 export default router; 
