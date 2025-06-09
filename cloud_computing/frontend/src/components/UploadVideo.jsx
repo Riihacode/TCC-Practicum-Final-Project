@@ -53,9 +53,11 @@ const VideoUploadForm = () => {
       setMessage("✅ Video berhasil diupload!");
       console.log(videoData);
 
-      if (thumbnail && videoData?.id) {
+      // if (thumbnail && videoData?.id) {
+       if (thumbnail && videoData?.video?.id) {
         setMessage((prev) => prev + " ⏳ Mengupload thumbnail...");
-        await uploadThumbnail(videoData.id, thumbnail);
+        // await uploadThumbnail(videoData.id, thumbnail);
+        await uploadThumbnail(videoData.video.id, thumbnail);
         setMessage((prev) => prev + " ✅ Thumbnail berhasil diupload!");
       }
 

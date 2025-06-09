@@ -27,7 +27,7 @@ const Profile = () => {
 
     try {
       const decoded = jwtDecode(token);
-      const id = decoded.id;
+      // const id = decoded.id;
       // setUserId(id);
 
       // getUserById(id)
@@ -56,7 +56,8 @@ const Profile = () => {
   };
 
   const handleDeleteProfilePic = async () => {
-    if (!userId || !profilePic) return;
+    // if (!userId || !profilePic) return;
+    if (!profilePic) return;
     if (!window.confirm("Yakin ingin menghapus foto profil?")) return;
 
     try {
@@ -76,7 +77,8 @@ const Profile = () => {
   };
 
   const handleSaveUsername = async () => {
-    if (!userId) return;
+    // if (!userId) return;
+    if (!username.trim()) return;
     try {
       setSavingUsername(true);
       // await updateUsername(userId, { username });
@@ -91,7 +93,8 @@ const Profile = () => {
   };
 
   const handleSaveProfilePic = async () => {
-    if (!userId || !newPicFile) return;
+    // if (!userId || !newPicFile) return;
+    if ( !newPicFile) return;
 
     try {
       setSavingPhoto(true);
