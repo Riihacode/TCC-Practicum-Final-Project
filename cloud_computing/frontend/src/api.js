@@ -219,8 +219,12 @@ export const deleteUser = async (id) => {
 };
 
 // Update username
-export const updateUsername = async (id, data) => {
-  const response = await axiosInstance.put(`/users/${id}/username`, data);
+// export const updateUsername = async (id, data) => {
+//   const response = await axiosInstance.put(`/users/${id}/username`, data);
+//   return response.data;
+// };
+export const updateUsername = async (data) => {
+  const response = await axiosInstance.put(`/users/username`, data);
   return response.data;
 };
 
