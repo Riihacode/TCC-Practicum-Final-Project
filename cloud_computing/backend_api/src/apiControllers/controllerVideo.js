@@ -380,7 +380,6 @@ async function deleteVideo(req, res) {
     }
 }
 
-
 async function updateVideoMetadata(req, res) {
     const { video_id } = req.params;
     const { title, description } = req.body;
@@ -421,7 +420,6 @@ async function updateVideoMetadata(req, res) {
         res.status(500).json({ error: "Internal server error" });
     }
 }
-
 
 // async function uploadVideoThumbnail(req, res) {
 //     const { video_id } = req.params;
@@ -807,7 +805,7 @@ async function updateVideoThumbnail(req, res) {
             busboy.on("file", (fieldname, file, info) => {
                 const { filename: fname, mimeType } = info;
 
-                if (fieldname !== "thumbnail" || !mimeType.startsWith("image/")) {
+                if (fieldname !== "thumbnail_url" || !mimeType.startsWith("image/")) {
                     uploadError = "Only image files are allowed";
                     file.resume();
                     return;
