@@ -177,20 +177,114 @@ const bucketName = process.env.GCS_BUCKET_NAME;
 //             return res.status(500).json({ error: "Internal server error" });
 //         }
 // }
+// async function uploadCommunityPostPhoto(req, res) {
+//     const { user_id } = req.params;
+
+//     const allowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+
+//     const contentType = req.headers["content-type"];
+//     if (!contentType || !contentType.startsWith("multipart/form-data")) {
+//         return res.status(400).json({
+//             error: "Invalid or missing Content-Type. Expected multipart/form-data"
+//         });
+//     }
+
+//     if (!user_id || isNaN(user_id)) {
+//         return res.status(400).json({ error: "Invalid user ID" });
+//     }
+
+//     const user = await User.findByPk(user_id);
+//     if (!user) {
+//         return res.status(404).json({ error: "User not found" });
+//     }
+
+//     const busboy = Busboy({ headers: req.headers });
+
+//     let fileBuffer = [];
+//     let filename = "";
+//     let fileReceived = false;
+//     let uploadError = null;
+//     let title = "";
+//     let description = "";
+
+//     const parseForm = () =>
+//         new Promise((resolve, reject) => {
+//             busboy.on("file", (fieldname, file, info) => {
+//                 const { filename: fname, mimeType } = info;
+//                 const ext = path.extname(fname).toLowerCase();
+
+//                 if (
+//                     fieldname !== "post_photo" || // harus sesuai frontend
+//                     !mimeType.startsWith("image/") ||
+//                     !allowedExtensions.includes(ext)
+//                 ) {
+//                     uploadError = "Only JPG, JPEG, PNG, or WEBP images are allowed";
+//                     file.resume();
+//                     return;
+//                 }
+
+//                 filename = fname;
+//                 fileReceived = true;
+//                 file.on("data", (chunk) => fileBuffer.push(chunk));
+//             });
+
+//             busboy.on("field", (fieldname, val) => {
+//                 if (fieldname === "title") title = val;
+//                 if (fieldname === "description") description = val;
+//             });
+
+//             busboy.on("finish", resolve);
+//             busboy.on("error", reject);
+//         });
+
+//     req.pipe(busboy);
+
+//     try {
+//         await parseForm();
+
+//         if (uploadError) return res.status(400).json({ error: uploadError });
+//         if (!fileReceived) return res.status(400).json({ error: "No photo uploaded" });
+//         if (!title || !description) {
+//             return res.status(400).json({ error: "Title and description are required" });
+//         }
+
+//         const sanitized = filename.replace(/\s+/g, "_");
+//         const finalFilename = `${Date.now()}-${sanitized}`;
+
+//         const post_photo_url = await uploadFileToGCS(
+//             user_id,
+//             "uploadedCommunityPostPhoto",
+//             finalFilename,
+//             Buffer.concat(fileBuffer)
+//         );
+
+//         const newPhoto = await CommunityPostPhoto.create({
+//             user_id,
+//             title,
+//             description,
+//             post_photo_url,
+//             uploaded_at: new Date().toISOString()
+//         });
+
+//         return res.status(201).json({
+//             message: "Photo uploaded successfully",
+//             data: newPhoto
+//         });
+//     } catch (err) {
+//         console.error("[UPLOAD-COMMUNITY-ERROR]", err.message);
+//         return res.status(500).json({ error: "Internal server error" });
+//     }
+// }
 async function uploadCommunityPostPhoto(req, res) {
-    const { user_id } = req.params;
+    const user_id = req.users.id; // ✅ Ambil dari JWT
 
     const allowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
-
     const contentType = req.headers["content-type"];
+    
     if (!contentType || !contentType.startsWith("multipart/form-data")) {
         return res.status(400).json({
             error: "Invalid or missing Content-Type. Expected multipart/form-data"
         });
-    }
-
-    if (!user_id || isNaN(user_id)) {
-        return res.status(400).json({ error: "Invalid user ID" });
     }
 
     const user = await User.findByPk(user_id);
@@ -214,7 +308,7 @@ async function uploadCommunityPostPhoto(req, res) {
                 const ext = path.extname(fname).toLowerCase();
 
                 if (
-                    fieldname !== "post_photo" || // harus sesuai frontend
+                    fieldname !== "post_photo" ||
                     !mimeType.startsWith("image/") ||
                     !allowedExtensions.includes(ext)
                 ) {
@@ -450,12 +544,58 @@ async function getCommunityPostPhotoById(req, res) {
 //         return res.status(500).json({ error: "Internal server error" });
 //     }
 // }
+// async function deleteCommunityPostPhoto(req, res) {
+//     const { user_id, photo_id } = req.params;
+
+//     // Validasi awal
+//     if (!user_id || isNaN(user_id) || !photo_id || isNaN(photo_id)) {
+//         return res.status(400).json({ error: "Invalid user_id or photo_id" });
+//     }
+
+//     try {
+//         const photo = await CommunityPostPhoto.findOne({
+//             where: { id: photo_id, user_id },
+//         });
+
+//         if (!photo) {
+//             return res.status(404).json({ error: "Photo not found" });
+//         }
+
+//         // Ekstrak path object dari URL GCS
+//         let objectPath = "";
+//         try {
+//             const url = photo.post_photo_url; // ✅ yang benar
+//             const parsedPath = new URL(url).pathname; 
+//             objectPath = decodeURIComponent(parsedPath.replace(`/${bucketName}/`, ""));
+//         } catch (urlErr) {
+//             console.warn("[WARNING] Failed to parse GCS URL:", urlErr.message);
+//             return res.status(400).json({ error: "Invalid GCS URL format in database" });
+//         }
+
+//         // Hapus file dari GCS
+//         try {
+//             await storage.bucket(bucketName).file(objectPath).delete();
+//             console.log(`[GCS] Deleted: ${objectPath}`);
+//         } catch (gcsErr) {
+//             console.warn(`[GCS-DELETE-WARN] Could not delete file from GCS: ${gcsErr.message}`);
+//         }
+
+//         // Hapus dari database
+//         await photo.destroy();
+
+//         return res.status(200).json({ message: "Photo deleted successfully" });
+//     } catch (error) {
+//         console.error("[DELETE-COMMUNITY-ERROR]", error.message);
+//         return res.status(500).json({ error: "Internal server error" });
+//     }
+// }
 async function deleteCommunityPostPhoto(req, res) {
-    const { user_id, photo_id } = req.params;
+    const user_id = req.users.id; // ✅ Ambil dari JWT
+    const { photo_id } = req.params;
 
     // Validasi awal
-    if (!user_id || isNaN(user_id) || !photo_id || isNaN(photo_id)) {
-        return res.status(400).json({ error: "Invalid user_id or photo_id" });
+    if (!photo_id || isNaN(photo_id)) {
+        return res.status(400).json({ error: "Invalid photo ID" });
     }
 
     try {
@@ -470,8 +610,8 @@ async function deleteCommunityPostPhoto(req, res) {
         // Ekstrak path object dari URL GCS
         let objectPath = "";
         try {
-            const url = photo.post_photo_url; // ✅ yang benar
-            const parsedPath = new URL(url).pathname; 
+            const url = photo.post_photo_url;
+            const parsedPath = new URL(url).pathname;
             objectPath = decodeURIComponent(parsedPath.replace(`/${bucketName}/`, ""));
         } catch (urlErr) {
             console.warn("[WARNING] Failed to parse GCS URL:", urlErr.message);

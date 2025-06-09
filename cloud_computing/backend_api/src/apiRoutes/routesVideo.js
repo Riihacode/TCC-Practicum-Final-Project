@@ -31,12 +31,14 @@ console.log(typeof upload.single);          // Harus "function"
 
 // [ CONTENT CREATOR ]
 // Video
-router.post("/users/:user_id/videos", verifyToken, checkUserIdMatch, videoUploadLimiter, uploadVideo);
+// router.post("/users/:user_id/videos", verifyToken, checkUserIdMatch, videoUploadLimiter, uploadVideo);
+router.post("/videos", verifyToken, videoUploadLimiter, uploadVideo); // ✅ lebih aman & bersih
 router.put("/videos/:video_id", verifyToken, checkVideoOwnership, updateVideoMetadata);
 router.delete("/videos/:video_id", verifyToken, checkVideoOwnership, validateVideoId, deleteVideo);
 
 // Thumbnail
-router.post("/users/:user_id/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, validateVideoId, uploadVideoThumbnail);
+// router.post("/users/:user_id/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, validateVideoId, uploadVideoThumbnail);
+router.post("/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, validateVideoId, uploadVideoThumbnail); // ✅
 router.put("/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, validateVideoId, updateVideoThumbnail);
 router.delete("/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, validateVideoId, deleteVideoThumbnail);
 router.get("/videos/:video_id/thumbnail", validateVideoId, getVideoThumbnail);  // untuk memudahkan content creator untuk mengecek thumbnail sebelumnya untuk memutuskan akan diganti atau tidak

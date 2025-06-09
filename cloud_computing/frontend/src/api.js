@@ -68,13 +68,27 @@ axiosInstance.interceptors.response.use(null, async (error) => {
 // VIDEO API
 
 // Upload video
-export const uploadVideo = async (userId, file, title = "", description = "") => {
+// export const uploadVideo = async (userId, file, title = "", description = "") => {
+//   const formData = new FormData();
+//   formData.append("video_file", file); // ✅ sesuai backend
+//   if (title) formData.append("title", title);
+//   if (description) formData.append("description", description);
+
+//   const response = await axiosInstance.post(`/users/${userId}/videos`, formData, {
+//     headers: {
+//       "Content-Type": "multipart/form-data",
+//     },
+//   });
+
+//   return response.data;
+// };
+export const uploadVideo = async (file, title = "", description = "") => {
   const formData = new FormData();
-  formData.append("video_file", file); // ✅ sesuai backend
+  formData.append("video_url", file); // ⚠️ pastikan ini cocok dengan backend
   if (title) formData.append("title", title);
   if (description) formData.append("description", description);
 
-  const response = await axiosInstance.post(`/users/${userId}/videos`, formData, {
+  const response = await axiosInstance.post(`/videos`, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
@@ -82,8 +96,6 @@ export const uploadVideo = async (userId, file, title = "", description = "") =>
 
   return response.data;
 };
-
-
 
 // Get all videos
 export const getAllVideos = async () => {
@@ -201,8 +213,12 @@ export const logoutUser = async () => {
 };
 
 // Get user by ID
-export const getUserById = async (id) => {
-  const response = await axiosInstance.get(`/users/${id}`);
+// export const getUserById = async (id) => {
+//   const response = await axiosInstance.get(`/users/${id}`);
+//   return response.data;
+// };
+export const getUserById = async () => {
+  const response = await axiosInstance.get(`/users/me`);
   return response.data;
 };
 
@@ -229,39 +245,61 @@ export const updateUsername = async (data) => {
 };
 
 // Upload profile picture
-export const uploadProfilePic = async (id, file) => {
+// export const uploadProfilePic = async (id, file) => {
+//   const formData = new FormData();
+//   formData.append("profile_pic", file);
+
+//   const response = await axiosInstance.post(`/users/${id}/profile-picture`, formData, {
+//     headers: {
+//       "Content-Type": "multipart/form-data",
+//     },
+//   });
+
+//   return response.data;
+// };
+export const uploadProfilePic = async (file) => {
   const formData = new FormData();
   formData.append("profile_pic", file);
 
-  const response = await axiosInstance.post(`/users/${id}/profile-picture`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+  const response = await axiosInstance.post(`/users/me/profile-picture`, formData, {
+    headers: { "Content-Type": "multipart/form-data" }
   });
 
   return response.data;
 };
 
 // Update profile picture
-export const updateProfilePic = async (id, file) => {
+// export const updateProfilePic = async (id, file) => {
+//   const formData = new FormData();
+//   formData.append("profile_pic", file);
+
+//   const response = await axiosInstance.put(`/users/${id}/profile-picture`, formData, {
+//     headers: {
+//       "Content-Type": "multipart/form-data",
+//     },
+//   });
+
+//   return response.data;
+// };
+export const updateProfilePic = async (file) => {
   const formData = new FormData();
   formData.append("profile_pic", file);
 
-  const response = await axiosInstance.put(`/users/${id}/profile-picture`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+  const response = await axiosInstance.put(`/users/me/profile-picture`, formData, {
+    headers: { "Content-Type": "multipart/form-data" }
   });
 
   return response.data;
 };
 
 // Delete profile picture
-export const deleteProfilePic = async (id) => {
-  const response = await axiosInstance.delete(`/users/${id}/profile-picture`);
+// export const deleteProfilePic = async (id) => {
+//   const response = await axiosInstance.delete(`/users/${id}/profile-picture`);
+//   return response.data;
+// };
+export const deleteProfilePic = async () => {
+  const response = await axiosInstance.delete(`/users/me/profile-picture`);
   return response.data;
 };
-
-
 
 export default axiosInstance;

@@ -108,8 +108,106 @@ const bucketName = process.env.GCS_BUCKET_NAME;
 //         return res.status(500).json({ error: "Internal server error" });
 //     }
 // }
+// async function uploadVideo(req, res) {
+//     const user_id = req.params.user_id;
+
+//     const contentType = req.headers["content-type"];
+//     if (!contentType || !contentType.startsWith("multipart/form-data")) {
+//         return res.status(400).json({
+//             error: "Invalid or missing Content-Type. Expected multipart/form-data",
+//         });
+//     }
+
+//     const allowedExtensions = [".mp4", ".mov", ".avi", ".webm", ".mkv"];
+//     const busboy = Busboy({ headers: req.headers });
+
+//     let fileBuffer = [];
+//     let filename = "";
+//     let fileReceived = false;
+//     let uploadError = null;
+//     let videoTitle = "";
+//     let videoDescription = ""; 
+    
+//     const parseForm = () =>
+//         new Promise((resolve, reject) => {
+//             busboy.on("file", (fieldname, file, info) => {
+//                 const { filename: fname, mimeType } = info;
+
+//                 // if (fieldname !== "video_file" || !mimeType.startsWith("video/")) {
+//                 if (fieldname !== "video_url" || !mimeType.startsWith("video/")) {
+//                     uploadError = "Only video files are allowed";
+//                     file.resume();
+//                     return;
+//                 }
+
+//                 const ext = path.extname(fname).toLowerCase();
+//                 if (!allowedExtensions.includes(ext)) {
+//                     uploadError = `Invalid file type. Allowed: ${allowedExtensions.join(", ")}`;
+//                     file.resume();
+//                     return;
+//                 }
+
+//                 filename = fname;
+//                 fileReceived = true;
+//                 file.on("data", (chunk) => fileBuffer.push(chunk));
+//             });
+
+//             busboy.on("field", (name, value) => {
+//                 if (name === "title") videoTitle = value;
+//                 if (name === "description") videoDescription = value;
+//             });
+
+//             busboy.on("finish", resolve);
+//             busboy.on("error", reject);
+//         });
+
+//     req.pipe(busboy);
+
+//     try {
+//         await parseForm();
+
+//         if (uploadError) return res.status(400).json({ error: uploadError });
+//         // if (!fileReceived) return res.status(400).json({ error: "No video file uploaded" });
+//         if (!fileReceived || !videoTitle || isNaN(user_id)) {
+//             return res.status(400).json({
+//                 error: "Required fields are missing or invalid",
+//             });
+//         }
+
+//         const user = await User.findByPk(user_id);
+//         if (!user) return res.status(404).json({ error: "User not found" });
+
+//         const sanitized = filename.replace(/\s+/g, "_");
+//         const finalFilename = `${Date.now()}-${sanitized}`;
+
+//         const videoUrl = await uploadFileToGCS(
+//             user_id,
+//             "uploadedVideo",
+//             finalFilename,
+//             Buffer.concat(fileBuffer)
+//         );
+
+//         const newVideo = await Video.create({
+//             user_id,
+//             title: videoTitle,
+//             description: videoDescription,
+//             video_url: videoUrl,
+//             uploaded_at: new Date(),
+//         });
+
+//         // await redis.del("videos:all");   // penggunaan redis
+
+//         return res.status(201).json({
+//             message: "Video uploaded successfully",
+//             video: newVideo,
+//         });
+//     } catch (err) {
+//         console.error("[UPLOAD-VIDEO-ERROR]", err.message);
+//         return res.status(500).json({ error: "Internal server error" });
+//     }
+// }
 async function uploadVideo(req, res) {
-    const user_id = req.params.user_id;
+    const user_id = req.users.id; // ✅ Ambil dari token
 
     const contentType = req.headers["content-type"];
     if (!contentType || !contentType.startsWith("multipart/form-data")) {
@@ -126,14 +224,13 @@ async function uploadVideo(req, res) {
     let fileReceived = false;
     let uploadError = null;
     let videoTitle = "";
-    let videoDescription = ""; 
-    
+    let videoDescription = "";
+
     const parseForm = () =>
         new Promise((resolve, reject) => {
             busboy.on("file", (fieldname, file, info) => {
                 const { filename: fname, mimeType } = info;
 
-                // if (fieldname !== "video_file" || !mimeType.startsWith("video/")) {
                 if (fieldname !== "video_url" || !mimeType.startsWith("video/")) {
                     uploadError = "Only video files are allowed";
                     file.resume();
@@ -167,8 +264,7 @@ async function uploadVideo(req, res) {
         await parseForm();
 
         if (uploadError) return res.status(400).json({ error: uploadError });
-        // if (!fileReceived) return res.status(400).json({ error: "No video file uploaded" });
-        if (!fileReceived || !videoTitle || isNaN(user_id)) {
+        if (!fileReceived || !videoTitle) {
             return res.status(400).json({
                 error: "Required fields are missing or invalid",
             });
@@ -194,8 +290,6 @@ async function uploadVideo(req, res) {
             video_url: videoUrl,
             uploaded_at: new Date(),
         });
-
-        // await redis.del("videos:all");   // penggunaan redis
 
         return res.status(201).json({
             message: "Video uploaded successfully",
@@ -499,8 +593,94 @@ async function updateVideoMetadata(req, res) {
 //         return res.status(500).json({ error: "Internal server error" });
 //     }
 // }
+// async function uploadVideoThumbnail(req, res) {
+//     const { user_id, video_id } = req.params;
+
+//     const contentType = req.headers["content-type"];
+//     if (!contentType || !contentType.startsWith("multipart/form-data")) {
+//         return res.status(400).json({
+//             error: "Invalid or missing Content-Type. Expected multipart/form-data",
+//         });
+//     }
+
+//     const busboy = Busboy({ headers: req.headers });
+
+//     let fileBuffer = [];
+//     let filename = "";
+//     let fileReceived = false;
+//     let uploadError = null;
+
+//     const parseForm = () =>
+//         new Promise((resolve, reject) => {
+//             busboy.on("file", (fieldname, file, info) => {
+//                 const { filename: fname, mimeType } = info;
+
+//                 if (fieldname !== "thumbnail_url" || !mimeType.startsWith("image/")) {
+//                     uploadError = "Only image files are allowed";
+//                     file.resume();
+//                     return;
+//                 }
+
+//                 // ✅ Validasi ekstensi file
+//                 const allowedExtensions = /\.(jpg|jpeg|png|webp)$/i;
+//                 if (!allowedExtensions.test(fname)) {
+//                     uploadError = "Invalid file extension for thumbnail";
+//                     file.resume();
+//                     return;
+//                 }
+
+//                 filename = fname;
+//                 fileReceived = true;
+//                 file.on("data", (chunk) => fileBuffer.push(chunk));
+//             });
+
+//             busboy.on("finish", resolve);
+//             busboy.on("error", reject);
+//         });
+
+//     req.pipe(busboy);
+
+//     try {
+//         await parseForm();
+
+//         if (uploadError) return res.status(400).json({ error: uploadError });
+//         if (!fileReceived) return res.status(400).json({ error: "No thumbnail uploaded" });
+
+//         const video = await Video.findByPk(video_id);
+//         if (!video || video.user_id !== parseInt(user_id)) {
+//             return res.status(404).json({ error: "Video not found or access denied" });
+//         }
+
+//         // ❌ Jangan lanjut jika thumbnail sudah ada
+//         if (video.thumbnail_url) {
+//             return res.status(409).json({ error: "Thumbnail already exists" });
+//         }
+
+//         const sanitized = filename.replace(/\s+/g, "_");
+//         const finalFilename = `${Date.now()}-${sanitized}`;
+
+//         const thumbnailUrl = await uploadFileToGCS(
+//             user_id,
+//             "uploadedVideoThumbnail",
+//             finalFilename,
+//             Buffer.concat(fileBuffer)
+//         );
+
+//         video.thumbnail_url = thumbnailUrl;
+//         await video.save();
+
+//         return res.status(200).json({
+//             message: "Thumbnail uploaded successfully",
+//             thumbnail_url: thumbnailUrl,
+//         });
+//     } catch (err) {
+//         console.error("[UPLOAD-THUMBNAIL-ERROR]", err.message);
+//         return res.status(500).json({ error: "Internal server error" });
+//     }
+// }
 async function uploadVideoThumbnail(req, res) {
-    const { user_id, video_id } = req.params;
+    const user_id = req.users.id; // ✅ Dari JWT
+    const { video_id } = req.params;
 
     const contentType = req.headers["content-type"];
     if (!contentType || !contentType.startsWith("multipart/form-data")) {
@@ -527,7 +707,6 @@ async function uploadVideoThumbnail(req, res) {
                     return;
                 }
 
-                // ✅ Validasi ekstensi file
                 const allowedExtensions = /\.(jpg|jpeg|png|webp)$/i;
                 if (!allowedExtensions.test(fname)) {
                     uploadError = "Invalid file extension for thumbnail";
@@ -553,11 +732,10 @@ async function uploadVideoThumbnail(req, res) {
         if (!fileReceived) return res.status(400).json({ error: "No thumbnail uploaded" });
 
         const video = await Video.findByPk(video_id);
-        if (!video || video.user_id !== parseInt(user_id)) {
+        if (!video || video.user_id !== user_id) {
             return res.status(404).json({ error: "Video not found or access denied" });
         }
 
-        // ❌ Jangan lanjut jika thumbnail sudah ada
         if (video.thumbnail_url) {
             return res.status(409).json({ error: "Thumbnail already exists" });
         }

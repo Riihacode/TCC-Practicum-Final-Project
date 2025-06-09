@@ -247,12 +247,31 @@ async function logoutUser(req, res) {
 //         res.status(500).json({ error: "Failed to get user details" });
 //     }
 // }
-async function getUserById(req, res) {
-    const { user_id } = req.params;
+// async function getUserById(req, res) {
+//     const { user_id } = req.params;
 
-    if (!user_id || isNaN(user_id)) {
-        return res.status(400).json({ error: "Invalid user ID" });
-    }
+//     if (!user_id || isNaN(user_id)) {
+//         return res.status(400).json({ error: "Invalid user ID" });
+//     }
+
+//     try {
+//         const user = await User.findByPk(user_id, {
+//             attributes: ['id', 'username', 'email', 'profile_pic']
+//         });
+
+//         if (!user) {
+//             return res.status(404).json({ error: "User not found" });
+//         }
+
+//         // console.log(`[GET-USER] ID: ${user.id}, Username: ${user.username}`);
+//         return res.status(200).json({ user });
+//     } catch (error) {
+//         console.error(`[GET-USER-ERROR] ${error.message}`);
+//         return res.status(500).json({ error: "Failed to get user details" });
+//     }
+// }
+async function getUserById(req, res) {
+    const user_id = req.users.id;  // ✅ Ambil dari JWT token
 
     try {
         const user = await User.findByPk(user_id, {
@@ -263,7 +282,6 @@ async function getUserById(req, res) {
             return res.status(404).json({ error: "User not found" });
         }
 
-        // console.log(`[GET-USER] ID: ${user.id}, Username: ${user.username}`);
         return res.status(200).json({ user });
     } catch (error) {
         console.error(`[GET-USER-ERROR] ${error.message}`);
@@ -271,8 +289,35 @@ async function getUserById(req, res) {
     }
 }
 
+
+// async function deleteUser(req, res) {
+//     const { user_id } = req.params;
+
+//     try {
+//         const user = await User.findByPk(user_id);
+
+//         if (!user) {
+//             return res.status(404).json({ error: "User not found" });
+//         }
+
+//         await user.destroy();
+
+//         console.log(`[DELETE-USER] User Deleted: ID = ${user.id}, Username = ${user.username}, Email = ${user.email}`);
+//         res.status(200).json({ 
+//             message: "User deleted successfully",
+//             user: {
+//                 id: user.id,
+//                 username: user.username,
+//                 email: user.email,
+//             }
+//         });
+//     } catch (error) {
+//         console.error(`[DELETE-USER] Failed to delete user: ${error.message}`);
+//         res.status(500).json({ error: error.message });
+//     }
+// }
 async function deleteUser(req, res) {
-    const { user_id } = req.params;
+    const user_id = req.users.id;  // ✅ Ambil ID dari token
 
     try {
         const user = await User.findByPk(user_id);
@@ -284,7 +329,7 @@ async function deleteUser(req, res) {
         await user.destroy();
 
         console.log(`[DELETE-USER] User Deleted: ID = ${user.id}, Username = ${user.username}, Email = ${user.email}`);
-        res.status(200).json({ 
+        res.status(200).json({
             message: "User deleted successfully",
             user: {
                 id: user.id,
@@ -297,6 +342,7 @@ async function deleteUser(req, res) {
         res.status(500).json({ error: error.message });
     }
 }
+
 
 // async function updateUsername(req, res) {
 //     const { user_id } = req.params;
@@ -456,8 +502,74 @@ async function updateUsername(req, res) {
 //     }
 // }
 
+// async function uploadProfilePic(req, res) {
+//     const user_id = req.params.user_id;
+
+//     const contentType = req.headers['content-type'];
+//     if (!contentType || !contentType.startsWith('multipart/form-data')) {
+//         return res.status(400).json({ error: "Invalid or missing Content-Type. Expected multipart/form-data" });
+//     }
+
+//     const busboy = Busboy({ headers: req.headers });
+
+//     let fileBuffer = [];
+//     let filename = "";
+//     let fileReceived = false;
+//     let uploadError = null;
+
+//     const parseForm = () =>
+//         new Promise((resolve, reject) => {
+//             busboy.on("file", (fieldname, file, info) => {
+//                 const { filename: fname, mimeType } = info;
+
+//                 if (fieldname !== "profile_pic" || !mimeType.startsWith("image/")) {
+//                     uploadError = "Only image files are allowed";
+//                     file.resume();
+//                     return;
+//                 }
+
+//                 filename = fname;
+//                 fileReceived = true;
+//                 file.on("data", (chunk) => fileBuffer.push(chunk));
+//             });
+
+//             busboy.on("finish", resolve);
+//             busboy.on("error", reject);
+//         });
+
+//     req.pipe(busboy);
+
+//     try {
+//         await parseForm();
+
+//         if (uploadError) return res.status(400).json({ error: uploadError });
+//         if (!fileReceived) return res.status(400).json({ error: "No file uploaded" });
+
+//         const user = await User.findByPk(user_id);
+//         if (!user) return res.status(404).json({ error: "User not found" });
+//         if (user.profile_pic) return res.status(409).json({ error: "Profile picture already exists." });
+
+//         const sanitized = filename.replace(/\s+/g, "_");
+//         const finalFilename = `${Date.now()}-${sanitized}`;
+
+//         const fileUrl = await uploadFileToGCS(
+//             user_id,
+//             "uploadedUserPhotoProfile",
+//             finalFilename,
+//             Buffer.concat(fileBuffer)
+//         );
+
+//         user.profile_pic = fileUrl;
+//         await user.save();
+
+//         return res.status(200).json({ message: "Profile picture uploaded", url: fileUrl });
+//     } catch (err) {
+//         console.error("[UPLOAD-PROFILE-ERROR]", err.message);
+//         return res.status(500).json({ error: "Internal server error" });
+//     }
+// }
 async function uploadProfilePic(req, res) {
-    const user_id = req.params.user_id;
+    const user_id = req.users.id; // ✅ Ambil dari JWT, bukan dari URL
 
     const contentType = req.headers['content-type'];
     if (!contentType || !contentType.startsWith('multipart/form-data')) {
@@ -522,6 +634,7 @@ async function uploadProfilePic(req, res) {
         return res.status(500).json({ error: "Internal server error" });
     }
 }
+
 
 // async function getUserProfile(req, res) {
 //     const { user_id } = req.params;
@@ -623,8 +736,55 @@ async function getUserProfile(req, res) {
 //     }
 // }
 
+// async function deleteProfilePic(req, res) {
+//     const { user_id } = req.params;
+
+//     try {
+//         const user = await User.findByPk(user_id);
+//         if (!user) return res.status(404).json({ error: "User not found" });
+
+//         if (!user.profile_pic) {
+//             return res.status(400).json({ error: "No profile picture to delete" });
+//         }
+
+//         // Ambil path objek dari URL
+//         const fileUrl = user.profile_pic;
+
+//         // ✅ Validasi dasar untuk keamanan (optional tapi berguna)
+//         if (!fileUrl.includes(bucketName)) {
+//             return res.status(400).json({ error: "Invalid profile picture path" });
+//         }
+
+        
+//         // 🔍 Ambil path objek dari URL
+//         const parsedPath = new URL(fileUrl).pathname; // e.g. /bucket-name/users/123/uploadedUserPhotoProfile/file.jpg
+//         const objectPath = parsedPath.replace(`/${bucketName}/`, ""); // hasil: users/123/uploadedUserPhotoProfile/file.jpg
+
+//         // // Hapus file dari GCS
+//         // await storage.bucket(bucketName).file(objectPath).delete();
+//         // console.log(`[GCS] Deleted profile pic: ${objectPath}`);
+
+//         // 🧹 Hapus file dari GCS (dengan error handling tambahan)
+//         try {
+//             await storage.bucket(bucketName).file(objectPath).delete();
+//             console.log(`[GCS] Deleted profile pic: ${objectPath}`);
+//         } catch (gcsErr) {
+//             console.warn(`[GCS WARNING] Gagal hapus file: ${gcsErr.message}`);
+//             // Tetap lanjut karena ini bukan error kritis
+//         }
+
+//         // Update database
+//         user.profile_pic = null;
+//         await user.save();
+
+//         return res.status(200).json({ message: "Profile picture deleted successfully" });
+//     } catch (error) {
+//         console.error("[DELETE-PROFILE-ERROR]", error.message);
+//         return res.status(500).json({ error: "Internal server error" });
+//     }
+// }
 async function deleteProfilePic(req, res) {
-    const { user_id } = req.params;
+    const user_id = req.users.id; // ✅ Ambil dari JWT
 
     try {
         const user = await User.findByPk(user_id);
@@ -634,33 +794,25 @@ async function deleteProfilePic(req, res) {
             return res.status(400).json({ error: "No profile picture to delete" });
         }
 
-        // Ambil path objek dari URL
         const fileUrl = user.profile_pic;
 
-        // ✅ Validasi dasar untuk keamanan (optional tapi berguna)
+        // Validasi keamanan path
         if (!fileUrl.includes(bucketName)) {
             return res.status(400).json({ error: "Invalid profile picture path" });
         }
 
-        
-        // 🔍 Ambil path objek dari URL
-        const parsedPath = new URL(fileUrl).pathname; // e.g. /bucket-name/users/123/uploadedUserPhotoProfile/file.jpg
-        const objectPath = parsedPath.replace(`/${bucketName}/`, ""); // hasil: users/123/uploadedUserPhotoProfile/file.jpg
+        // Parsing path objek dari URL
+        const parsedPath = new URL(fileUrl).pathname;
+        const objectPath = parsedPath.replace(`/${bucketName}/`, "");
 
-        // // Hapus file dari GCS
-        // await storage.bucket(bucketName).file(objectPath).delete();
-        // console.log(`[GCS] Deleted profile pic: ${objectPath}`);
-
-        // 🧹 Hapus file dari GCS (dengan error handling tambahan)
         try {
             await storage.bucket(bucketName).file(objectPath).delete();
             console.log(`[GCS] Deleted profile pic: ${objectPath}`);
         } catch (gcsErr) {
             console.warn(`[GCS WARNING] Gagal hapus file: ${gcsErr.message}`);
-            // Tetap lanjut karena ini bukan error kritis
+            // Tetap lanjut
         }
 
-        // Update database
         user.profile_pic = null;
         await user.save();
 
@@ -745,8 +897,95 @@ async function deleteProfilePic(req, res) {
 //         return res.status(500).json({ error: "Internal server error" });
 //     }
 // }
+// async function updateProfilePic(req, res) {
+//     const user_id = req.params.user_id;
+
+//     const contentType = req.headers["content-type"];
+//     if (!contentType || !contentType.startsWith("multipart/form-data")) {
+//         return res.status(400).json({
+//             error: "Invalid or missing Content-Type. Expected multipart/form-data",
+//         });
+//     }
+
+//     const busboy = Busboy({ headers: req.headers });
+
+//     let fileBuffer = [];
+//     let filename = "";
+//     let fileReceived = false;
+//     let uploadError = null;
+
+//     const parseForm = () =>
+//         new Promise((resolve, reject) => {
+//         busboy.on("file", (fieldname, file, info) => {
+//             const { filename: fname, mimeType } = info;
+
+//             if (fieldname !== "profile_pic" || !mimeType.startsWith("image/")) {
+//                 uploadError = "Only image files are allowed";
+//                 file.resume();
+//                 return;
+//             }
+
+//             filename = fname;
+//             fileReceived = true;
+//             file.on("data", (chunk) => fileBuffer.push(chunk));
+//         });
+
+//         busboy.on("finish", resolve);
+//         busboy.on("error", reject);
+//     });
+
+//     req.pipe(busboy);
+
+//     try {
+//         await parseForm();
+
+//         if (uploadError)
+//             return res.status(400).json({ error: uploadError });
+//         if (!fileReceived)
+//             return res.status(400).json({ error: "No file uploaded" });
+
+//         const user = await User.findByPk(user_id);
+//         if (!user)
+//             return res.status(404).json({ error: "User not found" });
+
+//         // 🧹 Hapus file lama jika ada
+//         if (user.profile_pic) {
+//             const pathParts = user.profile_pic.split("/");
+//             const oldFilename = pathParts[pathParts.length - 1];
+
+//             await deleteFileFromGCS(
+//                 user_id,
+//                 "uploadedUserPhotoProfile",
+//                 oldFilename
+//             );
+//         }
+
+//         // ☁️ Upload file baru ke Cloud Storage
+//         const sanitized = filename.replace(/\s+/g, "_");
+//         const finalFilename = `${Date.now()}-${sanitized}`;
+
+//         const fileUrl = await uploadFileToGCS(
+//             user_id,
+//             "uploadedUserPhotoProfile",
+//             finalFilename,
+//             Buffer.concat(fileBuffer)
+//         );
+
+//         // 💾 Update user
+//         user.profile_pic = fileUrl;
+//         await user.save();
+
+//         return res.status(200).json({
+//             message: "Profile picture updated successfully",
+//             profile_pic: fileUrl,
+//         });
+//     } catch (err) {
+//         console.error("[UPDATE-PROFILE-ERROR]", err.message);
+//         return res.status(500).json({ error: "Internal server error" });
+//     }
+// }
 async function updateProfilePic(req, res) {
-    const user_id = req.params.user_id;
+    const user_id = req.users.id; // ✅ Ambil dari token
 
     const contentType = req.headers["content-type"];
     if (!contentType || !contentType.startsWith("multipart/form-data")) {
@@ -764,23 +1003,23 @@ async function updateProfilePic(req, res) {
 
     const parseForm = () =>
         new Promise((resolve, reject) => {
-        busboy.on("file", (fieldname, file, info) => {
-            const { filename: fname, mimeType } = info;
+            busboy.on("file", (fieldname, file, info) => {
+                const { filename: fname, mimeType } = info;
 
-            if (fieldname !== "profile_pic" || !mimeType.startsWith("image/")) {
-                uploadError = "Only image files are allowed";
-                file.resume();
-                return;
-            }
+                if (fieldname !== "profile_pic" || !mimeType.startsWith("image/")) {
+                    uploadError = "Only image files are allowed";
+                    file.resume();
+                    return;
+                }
 
-            filename = fname;
-            fileReceived = true;
-            file.on("data", (chunk) => fileBuffer.push(chunk));
+                filename = fname;
+                fileReceived = true;
+                file.on("data", (chunk) => fileBuffer.push(chunk));
+            });
+
+            busboy.on("finish", resolve);
+            busboy.on("error", reject);
         });
-
-        busboy.on("finish", resolve);
-        busboy.on("error", reject);
-    });
 
     req.pipe(busboy);
 
