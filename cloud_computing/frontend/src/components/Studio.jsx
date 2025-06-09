@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getVideosBySlug, deleteVideo } from "../api";
 import { jwtDecode } from 'jwt-decode';
 import { Card, Col, Row, Button, Spinner } from "react-bootstrap";
+import { getUserById } from "../api";
 
 // const BASE_URL = "http://localhost:3000/";
 const BASE_URL = "https://backend-api-sosial-media-872136705893.us-central1.run.app/";
@@ -11,20 +12,26 @@ const Studio = () => {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // useEffect(() => {
+  //   const token = localStorage.getItem("accessToken");
+
+  //   if (!token) {
+  //     console.warn("Token tidak ditemukan");
+  //     return;
+  //   }
+
+  //   try {
+  //     const decoded = jwtDecode(token);
+  //     setSlug(decoded.slug);
+  //   } catch (error) {
+  //     console.error("Token tidak valid:", error);
+  //   }
+  // }, []);
+
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-
-    if (!token) {
-      console.warn("Token tidak ditemukan");
-      return;
-    }
-
-    try {
-      const decoded = jwtDecode(token);
-      setSlug(decoded.slug);
-    } catch (error) {
-      console.error("Token tidak valid:", error);
-    }
+    getUserById()
+      .then(res => setSlug(res.user.slug))
+      .catch(err => console.error("Gagal ambil slug:", err));
   }, []);
 
   useEffect(() => {

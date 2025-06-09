@@ -22,12 +22,35 @@ const VideoDetailPage = () => {
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
+  // useEffect(() => {
+  //   const fetchVideo = async () => {
+  //     try {
+  //       const res = await axios.get(`${BASE_URL}/api/videos/${id}`);
+  //       setVideo(res.data.video);
+  //     } catch (err) {
+  //       setError("Gagal mengambil data video: " + err.message);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchVideo();
+  // }, [id]);
+  
   useEffect(() => {
     const fetchVideo = async () => {
       try {
         const res = await axios.get(`${BASE_URL}/api/videos/${id}`);
+        console.log("🔍 Response dari backend:", res.data);
+        
+        if (!res.data.video) {
+          setError("Video tidak ditemukan di server");
+          return;
+        }
+
         setVideo(res.data.video);
       } catch (err) {
+        console.error("❌ Error saat fetch video:", err);
         setError("Gagal mengambil data video: " + err.message);
       } finally {
         setLoading(false);

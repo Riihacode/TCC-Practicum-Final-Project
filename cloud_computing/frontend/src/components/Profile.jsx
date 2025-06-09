@@ -11,7 +11,7 @@ const Profile = () => {
   const [profilePic, setProfilePic] = useState('');
   const [newPicFile, setNewPicFile] = useState(null);
   const [previewPicUrl, setPreviewPicUrl] = useState(null);
-  const [userId, setUserId] = useState(null);
+  // const [userId, setUserId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [savingUsername, setSavingUsername] = useState(false);
@@ -28,9 +28,10 @@ const Profile = () => {
     try {
       const decoded = jwtDecode(token);
       const id = decoded.id;
-      setUserId(id);
+      // setUserId(id);
 
-      getUserById(id)
+      // getUserById(id)
+      getUserById()
         .then((data) => {
           const user = data.user;
           setUsername(user.username || '');
@@ -60,7 +61,8 @@ const Profile = () => {
 
     try {
       setDeleting(true);
-      await deleteProfilePic(userId);
+      // await deleteProfilePic(userId);
+      await deleteProfilePic();
       setProfilePic('');
       setPreviewPicUrl(null);
       setNewPicFile(null);
@@ -95,11 +97,13 @@ const Profile = () => {
       setSavingPhoto(true);
       if (profilePic) {
         // update foto profil
-        const res = await updateProfilePic(userId, newPicFile);
+        // const res = await updateProfilePic(userId, newPicFile);
+        const res = await updateProfilePic(newPicFile);
         setProfilePic(res.profilePicUrl || profilePic);
       } else {
         // upload foto profil baru
-        const res = await uploadProfilePic(userId, newPicFile);
+        // const res = await uploadProfilePic(userId, newPicFile);
+        const res = await uploadProfilePic(newPicFile);
         setProfilePic(res.profilePicUrl || profilePic);
       }
       setNewPicFile(null);
