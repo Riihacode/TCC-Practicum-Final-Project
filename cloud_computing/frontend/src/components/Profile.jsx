@@ -77,7 +77,8 @@ const Profile = () => {
     if (!userId) return;
     try {
       setSavingUsername(true);
-      await updateUsername(userId, { username });
+      // await updateUsername(userId, { username });
+      await updateUsername({ username });
       alert("Username berhasil diperbarui");
     } catch (error) {
       console.error("Gagal memperbarui username:", error);
