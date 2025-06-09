@@ -8,7 +8,8 @@ const User = db.define(
         username: {
             type: DataTypes.STRING,
             allowNull: false,
-            unique: true
+            // unique: true
+            unique: false
         },
         slug: {
             type: DataTypes.STRING,

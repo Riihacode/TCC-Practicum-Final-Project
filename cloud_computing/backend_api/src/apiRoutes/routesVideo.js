@@ -38,12 +38,14 @@ router.delete("/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, v
 router.delete("/videos/:video_id", verifyToken, checkVideoOwnership, validateVideoId, deleteVideo);
 
 // Viewer
-router.get("/videos", syncVideosWithStorage, getAllVideos);
+// router.get("/videos", syncVideosWithStorage, getAllVideos);
+router.get("/videos", getAllVideos);
 router.get("/videos/:video_id", validateVideoId, getVideoId);
 // Channel
 // router.get("/users/slug/:slug", getUserBySlug); // untuk profil publik
 router.get("/channels/:slug/profile", getUserBySlug);
 // Public: Videos by slug (akses oleh viewer biasa)
-router.get("/channels/:slug/videos", syncVideosWithStorage, getVideosBySlug);
+// router.get("/channels/:slug/videos", syncVideosWithStorage, getVideosBySlug);
+router.get("/channels/:slug/videos", getVideosBySlug);
 
 export default router; 
