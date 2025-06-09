@@ -133,7 +133,8 @@ async function uploadVideo(req, res) {
             busboy.on("file", (fieldname, file, info) => {
                 const { filename: fname, mimeType } = info;
 
-                if (fieldname !== "video_file" || !mimeType.startsWith("video/")) {
+                // if (fieldname !== "video_file" || !mimeType.startsWith("video/")) {
+                if (fieldname !== "video_url" || !mimeType.startsWith("video/")) {
                     uploadError = "Only video files are allowed";
                     file.resume();
                     return;
