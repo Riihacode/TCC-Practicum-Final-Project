@@ -17,19 +17,21 @@ import { checkUserIdMatch } from "../apiMiddleware/user/middlewareUserCheckMatch
 
 const router = express.Router();
 
+// [ Content Creator Account Data ]
 router.post("/users/register", registerUser);
+// router.put("/users/:user_id/username", verifyToken, checkUserIdMatch, updateUsername);
+router.put("/users/username", verifyToken, updateUsername);
+router.delete("/users/:user_id", verifyToken, checkUserIdMatch, deleteUser);
+router.get("/users/:user_id", getUserById);  // Mempermudah ketika melakukan pengeditan akun
+
+// [ Login State ]
 router.post("/users/login", loginUser);
 router.delete("/users/logout", verifyToken, logoutUser);
-router.get("/users/:user_id", getUserById);  // Tambahan route GET
-router.delete("/users/:user_id", verifyToken, checkUserIdMatch, deleteUser);
-router.put("/users/:user_id/username", verifyToken, checkUserIdMatch, updateUsername);
+router.get("/token", refreshToken); // Implementasi token
 
-// Profile picture
+// [ Photo Profile Account File ]
 router.post("/users/:user_id/profile-picture", verifyToken, checkUserIdMatch, uploadProfilePic);
 router.put("/users/:user_id/profile-picture", verifyToken, checkUserIdMatch, updateProfilePic);
 router.delete("/users/:user_id/profile-picture", verifyToken, checkUserIdMatch, deleteProfilePic);
-
-// implementasi token
-router.get("/token", refreshToken);
 
 export default router;

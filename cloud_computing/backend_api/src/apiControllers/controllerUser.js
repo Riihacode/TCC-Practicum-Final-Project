@@ -319,26 +319,52 @@ async function deleteUser(req, res) {
 //         res.status(500).json({ error: "Failed to update username" });
 //     }
 // }
-async function updateUsername(req, res) {
-    const { user_id } = req.params;
-    const { username } = req.body;
+// async function updateUsername(req, res) {
+//     const { user_id } = req.params;
+//     const { username } = req.body;
 
-    if (!user_id || isNaN(user_id)) {
-        return res.status(400).json({ error: "Invalid user ID" });
-    }
+//     if (!user_id || isNaN(user_id)) {
+//         return res.status(400).json({ error: "Invalid user ID" });
+//     }
+
+//     if (!username || username.trim() === "") {
+//         return res.status(400).json({ error: "Username is required" });
+//     }
+
+//     try {
+//         const user = await User.findByPk(user_id);
+//         if (!user) return res.status(404).json({ error: "User not found" });
+
+//         user.username = username.trim();
+//         await user.save();
+
+//         console.log(`[UPDATE USERNAME] ID ${user_id} -> ${user.username}`);
+
+//         res.status(200).json({
+//             message: "Username updated successfully",
+//             username: user.username
+//         });
+//     } catch (error) {
+//         console.error(`[UPDATE-USERNAME-ERROR] ${error.message}`);
+//         res.status(500).json({ error: "Failed to update username" });
+//     }
+// }
+async function updateUsername(req, res) {
+    const userId = req.users.id; // ✅ Ambil dari JWT
+    const { username } = req.body;
 
     if (!username || username.trim() === "") {
         return res.status(400).json({ error: "Username is required" });
     }
 
     try {
-        const user = await User.findByPk(user_id);
+        const user = await User.findByPk(userId);
         if (!user) return res.status(404).json({ error: "User not found" });
 
         user.username = username.trim();
         await user.save();
 
-        console.log(`[UPDATE USERNAME] ID ${user_id} -> ${user.username}`);
+        console.log(`[UPDATE USERNAME] ID ${userId} -> ${user.username}`);
 
         res.status(200).json({
             message: "Username updated successfully",
