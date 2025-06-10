@@ -48,7 +48,7 @@ export async function uploadFileToGCS(user_id, folder, filename, buffer) {
         contentType: contentType, // ✅ Wajib benar untuk menghindari ORB error
         predefinedAcl: "publicRead", // ✅ supaya langsung bisa diakses publik
         metadata: {
-        cacheControl: "public, max-age=31536000",
+            cacheControl: "public, max-age=31536000",
         },
     });
 
