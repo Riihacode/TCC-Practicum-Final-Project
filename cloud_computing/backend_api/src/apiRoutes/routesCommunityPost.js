@@ -12,9 +12,7 @@ import { checkPhotoOwnership } from "../apiMiddleware/communityPost/middlewareCo
 const router = express.Router();
 
 router.post("/photos", verifyToken, uploadCommunityPostPhoto);
-// router.get("/users/:user_id/photos", getCommunityPostPhotosByUser);
+router.delete("/photos/:photo_id", verifyToken, checkPhotoOwnership, deleteCommunityPostPhoto);
 router.get("/channels/:slug/community", getCommunityPostsBySlug);
 router.get("/photos/:photo_id", getCommunityPostPhotoById);
-router.delete("/photos/:photo_id", verifyToken, checkPhotoOwnership, deleteCommunityPostPhoto);
-
 export default router;
