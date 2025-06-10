@@ -34,7 +34,7 @@ const RegisterPage = () => {
 return (
   <div
     className="d-flex justify-content-center align-items-center vh-100"
-    style={{ backgroundColor: '#000000' }}
+    style={{ backgroundColor: '#232222' }}
   >
     <div
       className="card shadow-lg rounded-4"
@@ -49,7 +49,7 @@ return (
       <div
         className="card-header text-center"
         style={{
-          backgroundColor: '#000',
+          backgroundColor: '#1c1c1c',
           color: '#FFD700',
           fontSize: '1.5rem',
           fontWeight: 'bold',
