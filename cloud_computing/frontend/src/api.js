@@ -213,8 +213,12 @@ export const getUserProfile = async (id) => {
 };
 
 // Delete user
-export const deleteUser = async (id) => {
-  const response = await axiosInstance.delete(`/users/${id}`);
+// export const deleteUser = async (id) => {
+//   const response = await axiosInstance.delete(`/users/${id}`);
+//   return response.data;
+// };
+export const deleteUser = async () => {
+  const response = await axiosInstance.delete(`/users/me`);
   return response.data;
 };
 

@@ -20,7 +20,7 @@ const router = express.Router();
 // [ Content Creator Account Data ]
 router.post("/users/register", registerUser);
 // router.put("/users/:user_id/username", verifyToken, checkUserIdMatch, updateUsername);
-router.put("/users/username", verifyToken, updateUsername);
+router.put("/users/me/username", verifyToken, updateUsername);
 // router.delete("/users/:user_id", verifyToken, checkUserIdMatch, deleteUser);
 router.delete("/users/me", verifyToken, deleteUser); // ✅ Simpel & aman
 // router.get("/users/:user_id", getUserById);  // Mempermudah ketika melakukan pengeditan akun
