@@ -6,7 +6,7 @@ const VideoDetail = ({ video }) => {
     <div className="p-3">
       {/* Video player */}
       <div className="ratio ratio-16x9 mb-3">
-        <video controls style={{ width:"100%" }} src={`${BASE_URL}${video.video_url}`} />
+        <video controls style={{ width:"100%" }} src={`${video.video_url}`} />
       </div>
 
       {/* Judul video */}

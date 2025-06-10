@@ -89,9 +89,7 @@ export const uploadVideo = async (file, title = "", description = "") => {
   if (description) formData.append("description", description);
 
   const response = await axiosInstance.post(`/videos`, formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
+    headers: {},
   });
 
   return response.data;
@@ -131,9 +129,7 @@ export const uploadThumbnail = async (videoId, file) => {
   formData.append('thumbnail_url', file);
 
   const response = await axiosInstance.post(`/videos/${videoId}/thumbnail`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
+    headers: {}
   });
 
   return response.data;
@@ -145,9 +141,7 @@ export const updateThumbnail = async (videoId, file) => {
   formData.append('thumbnail', file);
 
   const response = await axiosInstance.put(`/videos/${videoId}/thumbnail`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
+    headers: {}
   });
 
   return response.data;
@@ -266,7 +260,7 @@ export const uploadProfilePic = async (file) => {
   formData.append("profile_pic", file);
 
   const response = await axiosInstance.post(`/users/me/profile-picture`, formData, {
-    headers: { "Content-Type": "multipart/form-data" }
+    headers: {}
   });
 
   return response.data;
@@ -290,7 +284,7 @@ export const updateProfilePic = async (file) => {
   formData.append("profile_pic", file);
 
   const response = await axiosInstance.put(`/users/me/profile-picture`, formData, {
-    headers: { "Content-Type": "multipart/form-data" }
+    headers: {}
   });
 
   return response.data;

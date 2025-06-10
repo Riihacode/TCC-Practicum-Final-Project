@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Form, Spinner, Image, Container } from 'react-bootstrap';
-import { jwtDecode } from 'jwt-decode';
 import { getUserById, updateUsername, uploadProfilePic, updateProfilePic, deleteProfilePic } from '../api';
 
 const BASE_URL = "https://backend-api-sosial-media-872136705893.us-central1.run.app/";
@@ -26,7 +25,6 @@ const Profile = () => {
     if (!token) return;
 
     try {
-      const decoded = jwtDecode(token);
       // const id = decoded.id;
       // setUserId(id);
 
