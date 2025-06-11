@@ -130,7 +130,7 @@ export const uploadThumbnail = async (videoId, file) => {
 // Update thumbnail
 export const updateThumbnail = async (videoId, file) => {
   const formData = new FormData();
-  formData.append('thumbnail', file);
+  formData.append('thumbnail_url', file);
 
   const response = await axiosInstance.put(`/videos/${videoId}/thumbnail`, formData, {
     headers: {
