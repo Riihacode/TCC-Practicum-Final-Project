@@ -110,16 +110,26 @@ export const getVideoById = async (videoId) => {
 };
 
 // Delete video
-export const deleteVideo = async (videoId) => {
-  const response = await axiosInstance.delete(`/videos/${videoId}`);
+// export const deleteVideo = async (videoId) => {
+//   const response = await axiosInstance.delete(`/videos/${videoId}`);
+//   return response.data;
+// };
+export const deleteVideo = async (userId, videoId) => {
+  const response = await axiosInstance.delete(`/users/${userId}/videos/${videoId}`);
   return response.data;
 };
 
+
 // Update video metadata
-export const updateVideoMetadata = async (videoId, data) => {
-  const response = await axiosInstance.put(`/videos/${videoId}`, data);
+// export const updateVideoMetadata = async (videoId, data) => {
+//   const response = await axiosInstance.put(`/videos/${videoId}`, data);
+//   return response.data;
+// };
+export const updateVideoMetadata = async (userId, videoId, data) => {
+  const response = await axiosInstance.put(`/users/${userId}/videos/${videoId}`, data);
   return response.data;
 };
+
 
 
 // THUMBNAIL API
@@ -151,18 +161,35 @@ export const uploadThumbnail = async (userId, videoId, file) => {
 };
 
 // Update thumbnail
-export const updateThumbnail = async (videoId, file) => {
+// export const updateThumbnail = async (videoId, file) => {
+//   const formData = new FormData();
+//   formData.append('thumbnail_url', file);
+
+//   const response = await axiosInstance.put(`/videos/${videoId}/thumbnail`, formData, {
+//     headers: {
+//       'Content-Type': 'multipart/form-data'
+//     }
+//   });
+
+//   return response.data;
+// };
+export const updateThumbnail = async (userId, videoId, file) => {
   const formData = new FormData();
   formData.append('thumbnail_url', file);
 
-  const response = await axiosInstance.put(`/videos/${videoId}/thumbnail`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
+  const response = await axiosInstance.put(
+    `/users/${userId}/videos/${videoId}/thumbnail`,
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
     }
-  });
+  );
 
   return response.data;
 };
+
 
 // Get thumbnail
 export const getThumbnail = async (videoId) => {
@@ -173,10 +200,15 @@ export const getThumbnail = async (videoId) => {
 };
 
 // Delete thumbnail
-export const deleteThumbnail = async (videoId) => {
-  const response = await axiosInstance.delete(`/videos/${videoId}/thumbnail`);
+// export const deleteThumbnail = async (videoId) => {
+//   const response = await axiosInstance.delete(`/videos/${videoId}/thumbnail`);
+//   return response.data;
+// };
+export const deleteThumbnail = async (userId, videoId) => {
+  const response = await axiosInstance.delete(`/users/${userId}/videos/${videoId}/thumbnail`);
   return response.data;
 };
+
 
 //
 // ==========================

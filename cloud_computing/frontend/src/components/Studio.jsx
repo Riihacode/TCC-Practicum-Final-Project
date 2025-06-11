@@ -12,7 +12,24 @@ const Studio = () => {
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [userId, setUserId] = useState(null);
 
+ 
+  // useEffect(() => {
+  //   const token = localStorage.getItem("accessToken");
+
+  //   if (!token) {
+  //     console.warn("Token tidak ditemukan");
+  //     return;
+  //   }
+
+  //   try {
+  //     const decoded = jwtDecode(token);
+  //     setSlug(decoded.slug);
+  //   } catch (error) {
+  //     console.error("Token tidak valid:", error);
+  //   }
+  // }, []);
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
 
@@ -24,10 +41,43 @@ const Studio = () => {
     try {
       const decoded = jwtDecode(token);
       setSlug(decoded.slug);
+      setUserId(decoded.id); // ✅ ambil userId dari token
     } catch (error) {
       console.error("Token tidak valid:", error);
     }
   }, []);
+
+  // useEffect(() => {
+  //   if (!slug) return;
+
+  //   setLoading(true);
+  //   getVideosBySlug(slug)
+  //     .then((data) => {
+  //       if (data && Array.isArray(data.videos)) {
+  //         setVideos(data.videos);
+  //       } else {
+  //         setVideos([]);
+  //         console.warn("Format data API tidak sesuai:", data);
+  //       }
+  //     })
+  //     .catch((err) => {
+  //       console.error("Gagal memuat video:", err);
+  //       setVideos([]);
+  //     })
+  //     .finally(() => setLoading(false));
+  // }, [slug]);
+
+  // const handleDelete = async (id) => {
+  //   if (!window.confirm("Yakin ingin menghapus video ini?")) return;
+
+  //   try {
+  //     await deleteVideo(id);
+  //     setVideos((prev) => prev.filter((video) => video.id !== id));
+  //   } catch (err) {
+  //     console.error("Gagal menghapus video:", err);
+  //     alert("Gagal menghapus video.");
+  //   }
+  // };
 
   useEffect(() => {
     if (!slug) return;
@@ -53,7 +103,7 @@ const Studio = () => {
     if (!window.confirm("Yakin ingin menghapus video ini?")) return;
 
     try {
-      await deleteVideo(id);
+      await deleteVideo(userId, id);
       setVideos((prev) => prev.filter((video) => video.id !== id));
     } catch (err) {
       console.error("Gagal menghapus video:", err);

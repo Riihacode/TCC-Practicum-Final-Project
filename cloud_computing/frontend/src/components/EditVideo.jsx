@@ -76,13 +76,12 @@ const EditVideo = () => {
         console.log("thumbnail_url:", data.thumbnail_url);
 
         // Ambil thumbnail langsung dari response jika ada
-        if (thumbnailFile) {
-          if (thumbnailUrl) {
-            await updateThumbnail(userId, id, thumbnailFile);
-          } else {
-            await uploadThumbnail(userId, id, thumbnailFile); // kamu juga perlu refactor uploadThumbnail
-          }
-        }
+      if (data.thumbnail_url) {
+        setThumbnailUrl(data.thumbnail_url);
+      } else {
+        setThumbnailUrl(null);
+      }
+        
       } catch (error) {
         console.error("Gagal mengambil data video:", error);
       }
@@ -93,19 +92,49 @@ const EditVideo = () => {
 
 
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   try {
+  //     // Update metadata judul & deskripsi
+  //     await updateVideoMetadata(id, { title, description });
+
+  //     // Upload atau update thumbnail jika ada file baru
+  //     if (thumbnailFile) {
+  //       if (thumbnailUrl) {
+  //         await updateThumbnail(id, thumbnailFile);
+  //       } else {
+  //         await uploadThumbnail(id, thumbnailFile);
+  //       }
+  //     }
+
+  //     setMessage("Video berhasil diperbarui!");
+  //   } catch (err) {
+  //     setMessage("Gagal memperbarui video.");
+  //     console.error(err);
+  //   }
+  // };
+
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!userId) {
+      setMessage("❌ User belum dikenali. Silakan login ulang.");
+      return;
+    }
+    
     try {
       // Update metadata judul & deskripsi
-      await updateVideoMetadata(id, { title, description });
+       // ✅ Update metadata
+      await updateVideoMetadata(userId, id, { title, description });  
 
       // Upload atau update thumbnail jika ada file baru
       if (thumbnailFile) {
         if (thumbnailUrl) {
-          await updateThumbnail(id, thumbnailFile);
+          await updateThumbnail(userId, id, thumbnailFile);
         } else {
-          await uploadThumbnail(id, thumbnailFile);
+          await uploadThumbnail(userId, id, thumbnailFile); // kamu juga perlu refactor uploadThumbnail
         }
       }
 
@@ -116,16 +145,32 @@ const EditVideo = () => {
     }
   };
 
+  // const handleDeleteThumbnail = async () => {
+  //   try {
+  //     await deleteThumbnail(id);
+  //     setThumbnailUrl(null);
+  //     setMessage("Thumbnail berhasil dihapus.");
+  //   } catch (err) {
+  //     setMessage("Gagal menghapus thumbnail.");
+  //     console.error(err);
+  //   }
+  // };
   const handleDeleteThumbnail = async () => {
+    if (!userId) {
+      setMessage("❌ User belum dikenali. Silakan login ulang.");
+      return;
+    }
+
     try {
-      await deleteThumbnail(id);
+      await deleteThumbnail(userId, id);
       setThumbnailUrl(null);
-      setMessage("Thumbnail berhasil dihapus.");
+      setMessage("✅ Thumbnail berhasil dihapus.");
     } catch (err) {
-      setMessage("Gagal menghapus thumbnail.");
+      setMessage("❌ Gagal menghapus thumbnail.");
       console.error(err);
     }
   };
+
 
   return (
     <div className="container mt-5" style={{ maxWidth: "600px" }}>
