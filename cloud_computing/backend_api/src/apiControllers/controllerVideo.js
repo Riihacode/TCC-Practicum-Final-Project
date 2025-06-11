@@ -806,7 +806,7 @@ async function updateVideoThumbnail(req, res) {
             busboy.on("file", (fieldname, file, info) => {
                 const { filename: fname, mimeType } = info;
 
-                if (fieldname !== "thumbnail" || !mimeType.startsWith("image/")) {
+                if (fieldname !== "thumbnail_url" || !mimeType.startsWith("image/")) {
                     uploadError = "Only image files are allowed";
                     file.resume();
                     return;
