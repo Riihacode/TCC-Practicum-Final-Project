@@ -1,4 +1,5 @@
-import React, { useState} from "react";
+import React, { useState, useEffect} from "react";
+import { jwtDecode } from 'jwt-decode';
 import { uploadVideo, uploadThumbnail } from "../api";
 
 const VideoUploadForm = () => {
@@ -6,23 +7,23 @@ const VideoUploadForm = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [message, setMessage] = useState("");
-  // const [userId, setUserId] = useState(null);
+  const [userId, setUserId] = useState(null);
   const [thumbnail, setThumbnail] = useState(null);
 
-  // useEffect(() => {
-  //   const token = localStorage.getItem("accessToken");
-  //   if (!token) {
-  //     console.warn("Token tidak ditemukan");
-  //     return;
-  //   }
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      console.warn("Token tidak ditemukan");
+      return;
+    }
 
-  //   try {
-  //     const decoded = jwtDecode(token);
-  //     setUserId(decoded.id);
-  //   } catch (err) {
-  //     console.error("Gagal decode token:", err);
-  //   }
-  // }, []);
+    try {
+      const decoded = jwtDecode(token);
+      setUserId(decoded.id);
+    } catch (err) {
+      console.error("Gagal decode token:", err);
+    }
+  }, []);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -40,15 +41,15 @@ const VideoUploadForm = () => {
       return;
     }
 
-    // if (!userId) {
-    //   setMessage("❌ User belum dikenali. Silakan login ulang.");
-    //   return;
-    // }
+    if (!userId) {
+      setMessage("❌ User belum dikenali. Silakan login ulang.");
+      return;
+    }
 
     try {
       setMessage("⏳ Mengupload video...");
-      // const videoData = await uploadVideo(userId, file, title, description);
-      const videoData = await uploadVideo(file, title, description);
+      const videoData = await uploadVideo(userId, file, title, description);
+      //const videoData = await uploadVideo(file, title, description);
       setMessage("✅ Video berhasil diupload!");
       console.log(videoData);
 
