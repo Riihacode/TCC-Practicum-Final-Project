@@ -501,7 +501,9 @@ async function updateVideoMetadata(req, res) {
 //     }
 // }
 async function uploadVideoThumbnail(req, res) {
-    const { user_id, video_id } = req.params;
+    // const { user_id, video_id } = req.params;
+    const { video_id } = req.params;
+    const user_id = req.users.id; // dari JWT
 
     const contentType = req.headers["content-type"];
     if (!contentType || !contentType.startsWith("multipart/form-data")) {
