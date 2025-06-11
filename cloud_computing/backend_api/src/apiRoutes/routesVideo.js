@@ -37,7 +37,7 @@ router.post("/users/:user_id/videos", verifyToken, checkUserIdMatch, videoUpload
 // router.delete("/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, validateVideoId, deleteVideoThumbnail);
 // router.delete("/videos/:video_id", verifyToken, checkVideoOwnership, validateVideoId, deleteVideo);
 router.put("/users/:user_id/videos/:video_id", verifyToken, checkUserIdMatch, checkVideoOwnership, updateVideoMetadata);
-router.post("/users/:user_id/videos/:video_id/thumbnail", verifyToken, checkUserIdMatch, checkVideoOwnership, validateVideoId, uploadVideoThumbnail);
+router.post("/users/:user_id/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, validateVideoId, uploadVideoThumbnail);
 router.put("/users/:user_id/videos/:video_id/thumbnail", verifyToken, checkUserIdMatch, checkVideoOwnership, validateVideoId, updateVideoThumbnail);
 // router.get("/users/:user_id/videos/:video_id/thumbnail", checkUserIdMatch, validateVideoId, getVideoThumbnail);
 router.delete("/users/:user_id/videos/:video_id/thumbnail", verifyToken, checkUserIdMatch, checkVideoOwnership, validateVideoId, deleteVideoThumbnail);

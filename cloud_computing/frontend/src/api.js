@@ -285,7 +285,7 @@ export const uploadProfilePic = async (id, file) => {
   formData.append("profile_pic", file);
 
   // const response = await axiosInstance.post(`/users/${id}/profile-picture`, formData, {
-  const response = await axiosInstance.post(`/videos/:video_id/user/:user_id/thumbnail`, formData, {
+  const response = await axiosInstance.post(`/users/${id}/profile-picture`, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },

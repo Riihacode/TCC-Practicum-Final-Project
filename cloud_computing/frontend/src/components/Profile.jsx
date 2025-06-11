@@ -104,6 +104,7 @@ const Profile = () => {
       setNewPicFile(null);
       setPreviewPicUrl(null);
       alert("Foto profil berhasil diperbarui");
+      window.location.reload();
     } catch (error) {
       console.error("Gagal memperbarui foto profil:", error);
       alert("Gagal memperbarui foto profil");

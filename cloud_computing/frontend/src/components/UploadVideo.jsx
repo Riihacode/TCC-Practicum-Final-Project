@@ -1,105 +1,58 @@
-import React, { useState, useEffect } from "react";
-import { uploadVideo, uploadThumbnail } from "../api";
-import { jwtDecode } from "jwt-decode";
+import React, { useState} from "react";
+import { uploadVideo } from "../api";
 
 const VideoUploadForm = () => {
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [message, setMessage] = useState("");
-  const [userId, setUserId] = useState(null);
-  const [thumbnail, setThumbnail] = useState(null);
+  // const [userId, setUserId] = useState(null);
 
-  useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      console.warn("Token tidak ditemukan");
-      return;
-    }
+  // useEffect(() => {
+  //   const token = localStorage.getItem("accessToken");
+  //   if (!token) {
+  //     console.warn("Token tidak ditemukan");
+  //     return;
+  //   }
 
-    try {
-      const decoded = jwtDecode(token);
-      setUserId(decoded.id);
-    } catch (err) {
-      console.error("Gagal decode token:", err);
-    }
-  }, []);
+  //   try {
+  //     const decoded = jwtDecode(token);
+  //     setUserId(decoded.id);
+  //   } catch (err) {
+  //     console.error("Gagal decode token:", err);
+  //   }
+  // }, []);
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
 
-  const handleThumbnailChange = (e) => {
-    setThumbnail(e.target.files[0]);
-  };
-
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-
-  //   if (!file || !title || !description) {
-  //     setMessage("❌ Semua field wajib diisi!");
-  //     return;
-  //   }
-
-  //   if (!userId) {
-  //     setMessage("❌ User belum dikenali. Silakan login ulang.");
-  //     return;
-  //   }
-
-  //   try {
-  //     setMessage("⏳ Mengupload video...");
-  //     const videoData = await uploadVideo(userId, file, title, description);
-  //     setMessage("✅ Video berhasil diupload!");
-  //     console.log(videoData);
-
-  //     if (thumbnail && videoData?.id) {
-  //       setMessage((prev) => prev + " ⏳ Mengupload thumbnail...");
-  //       await uploadThumbnail(videoData.id, thumbnail);
-  //       setMessage((prev) => prev + " ✅ Thumbnail berhasil diupload!");
-  //     }
-
-  //     // Reset form
-  //     setTitle("");
-  //     setDescription("");
-  //     setFile(null);
-  //     setThumbnail(null);
-  //   } catch (error) {
-  //     console.error(error);
-  //     setMessage(error.response?.data?.error || "❌ Upload gagal.");
-  //   }
-  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!file || !title || !description) {
-      setMessage("❌ Semua field wajib diisi!");
+      setMessage("❌ Semua field wajib diisi ya!");
       return;
     }
 
-    if (!userId) {
-      setMessage("❌ User belum dikenali. Silakan login ulang.");
-      return;
-    }
+    // if (!userId) {
+    //   setMessage("❌ User belum dikenali. Silakan login ulang.");
+    //   return;
+    // }
+    //
 
     try {
       setMessage("⏳ Mengupload video...");
-      const videoData = await uploadVideo(userId, file, title, description);
+      // const videoData = await uploadVideo(userId, file, title, description);
+      const videoData = await uploadVideo(file, title, description);
       setMessage("✅ Video berhasil diupload!");
       console.log(videoData);
-
-      // ✅ Upload thumbnail (jika ada)
-      if (thumbnail && videoData?.id) {
-        setMessage((prev) => prev + " ⏳ Mengupload thumbnail...");
-        await uploadThumbnail(userId, videoData.id, thumbnail); // ← di sini perbaikannya
-        setMessage((prev) => prev + " ✅ Thumbnail berhasil diupload!");
-      }
 
       // Reset form
       setTitle("");
       setDescription("");
       setFile(null);
-      setThumbnail(null);
     } catch (error) {
       console.error(error);
       setMessage(error.response?.data?.error || "❌ Upload gagal.");
@@ -133,16 +86,6 @@ const VideoUploadForm = () => {
             rows="4"
             required
           ></textarea>
-        </div>
-
-        <div className="mb-3">
-          <label className="form-label text-light">Thumbnail (opsional)</label>
-          <input
-            type="file"
-            className="form-control bg-light text-dark"
-            accept="image/*"
-            onChange={handleThumbnailChange}
-          />
         </div>
 
         <div className="mb-3">
