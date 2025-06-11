@@ -15,9 +15,52 @@ const EditVideo = () => {
   const [thumbnailFile, setThumbnailFile] = useState(null);
   const [thumbnailUrl, setThumbnailUrl] = useState(null);
   const [message, setMessage] = useState("");
+  const [userId, setUserId] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        setUserId(decoded.id);
+      } catch (err) {
+        console.error("Gagal decode token:", err);
+      }
+    }
+  }, []);
   
 
-  // ✅ Ambil metadata video saat pertama kali dibuka
+  // // ✅ Ambil metadata video saat pertama kali dibuka
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       const response = await getVideoById(id);
+
+  //       const data = response.video;
+
+  //       setTitle(data.title || "");
+  //       setDescription(data.description || "");
+  //       console.log(data);
+  //       console.log("title:", data.title);
+  //       console.log("description:", data.description);
+  //       console.log("thumbnail_url:", data.thumbnail_url);
+
+  //       // Ambil thumbnail langsung dari response jika ada
+  //     if (data.thumbnail_url) {
+  //       setThumbnailUrl(data.thumbnail_url);
+  //     } else {
+  //       setThumbnailUrl(null);
+  //     }
+        
+  //     } catch (error) {
+  //       console.error("Gagal mengambil data video:", error);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, [id]);
+  
+    // ✅ Ambil metadata video saat pertama kali dibuka
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -33,12 +76,13 @@ const EditVideo = () => {
         console.log("thumbnail_url:", data.thumbnail_url);
 
         // Ambil thumbnail langsung dari response jika ada
-      if (data.thumbnail_url) {
-        setThumbnailUrl(data.thumbnail_url);
-      } else {
-        setThumbnailUrl(null);
-      }
-        
+        if (thumbnailFile) {
+          if (thumbnailUrl) {
+            await updateThumbnail(userId, id, thumbnailFile);
+          } else {
+            await uploadThumbnail(userId, id, thumbnailFile); // kamu juga perlu refactor uploadThumbnail
+          }
+        }
       } catch (error) {
         console.error("Gagal mengambil data video:", error);
       }
@@ -46,6 +90,7 @@ const EditVideo = () => {
 
     fetchData();
   }, [id]);
+
 
 
   const handleSubmit = async (e) => {
