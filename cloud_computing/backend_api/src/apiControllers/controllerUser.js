@@ -431,7 +431,7 @@ async function updateUsername(req, res) {
 // }
 
 async function uploadProfilePic(req, res) {
-    const user_id = req.params.user_id;
+    const { user_id } = req.params;
 
     const contentType = req.headers['content-type'];
     if (!contentType || !contentType.startsWith('multipart/form-data')) {
