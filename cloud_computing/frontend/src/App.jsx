@@ -10,6 +10,7 @@ import ProfilePage from "./pages/ProfilePage";
 import VideoUploadPage from "./pages/UploadVideoPage";
 import PrivateRoute from "./components/PrivateRoute";
 import StudioPage from "./pages/StudioPage";
+import EditVideoPage from "./pages/EditVideoPage";
 
 function App() {
   const [token, setToken] = useState(localStorage.getItem("accessToken"));
@@ -47,6 +48,14 @@ function App() {
           element={
             <PrivateRoute token={token}>
               <StudioPage/>
+            </PrivateRoute>
+          } />
+          <Route
+          path="/edit-video/:id"
+
+          element={
+            <PrivateRoute token={token}>
+              <EditVideoPage />
             </PrivateRoute>
           } />
 

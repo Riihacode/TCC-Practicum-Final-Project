@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getVideosBySlug, deleteVideo } from "../api";
 import { jwtDecode } from 'jwt-decode';
 import { Card, Col, Row, Button, Spinner } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 
 // const BASE_URL = "http://localhost:3000/";
 const BASE_URL = "https://backend-api-sosial-media-872136705893.us-central1.run.app/";
@@ -10,6 +11,7 @@ const Studio = () => {
   const [slug, setSlug] = useState("");
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -93,10 +95,11 @@ const Studio = () => {
                 e.currentTarget.style.transform = 'scale(1)';
                 e.currentTarget.style.boxShadow = '0 0.125rem 0.25rem rgba(0,0,0,0.1)';
               }}
+              onClick={() => navigate(`/edit-video/${video.id}`)}
             >
               <div className="ratio ratio-16x9">
                 <Card.Img
-                  src={`${BASE_URL}${video.thumbnail_url}`}
+                  src={`${video.thumbnail_url}`}
                   alt={video.title}
                   className="rounded-top"
                   style={{ objectFit: 'cover' }}
