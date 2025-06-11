@@ -63,8 +63,6 @@ axiosInstance.interceptors.response.use(null, async (error) => {
 });
 
 
-await uploadThumbnail(userId, videoData.id, thumbnail);
-
 
 // VIDEO API
 
