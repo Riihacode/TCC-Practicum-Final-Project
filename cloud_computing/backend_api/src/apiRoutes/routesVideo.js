@@ -31,8 +31,8 @@ console.log(typeof upload.single);          // Harus "function"
 // Content Creator
 router.post("/users/:user_id/videos", verifyToken, checkUserIdMatch, videoUploadLimiter, uploadVideo);
 router.put("/videos/:video_id", verifyToken, checkVideoOwnership, updateVideoMetadata);
-router.post("/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, validateVideoId, uploadVideoThumbnail);
-router.put("/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, validateVideoId, updateVideoThumbnail);
+router.post("/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, uploadVideoThumbnail);
+router.put("/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, updateVideoThumbnail);
 router.get("/videos/:video_id/thumbnail", validateVideoId, getVideoThumbnail);
 router.delete("/videos/:video_id/thumbnail", verifyToken, checkVideoOwnership, validateVideoId, deleteVideoThumbnail);
 router.delete("/videos/:video_id", verifyToken, checkVideoOwnership, validateVideoId, deleteVideo);
