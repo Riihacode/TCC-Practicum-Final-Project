@@ -33,6 +33,42 @@ const VideoUploadForm = () => {
     setThumbnail(e.target.files[0]);
   };
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   if (!file || !title || !description) {
+  //     setMessage("❌ Semua field wajib diisi!");
+  //     return;
+  //   }
+
+  //   if (!userId) {
+  //     setMessage("❌ User belum dikenali. Silakan login ulang.");
+  //     return;
+  //   }
+
+  //   try {
+  //     setMessage("⏳ Mengupload video...");
+  //     const videoData = await uploadVideo(userId, file, title, description);
+  //     setMessage("✅ Video berhasil diupload!");
+  //     console.log(videoData);
+
+  //     if (thumbnail && videoData?.id) {
+  //       setMessage((prev) => prev + " ⏳ Mengupload thumbnail...");
+  //       await uploadThumbnail(videoData.id, thumbnail);
+  //       setMessage((prev) => prev + " ✅ Thumbnail berhasil diupload!");
+  //     }
+
+  //     // Reset form
+  //     setTitle("");
+  //     setDescription("");
+  //     setFile(null);
+  //     setThumbnail(null);
+  //   } catch (error) {
+  //     console.error(error);
+  //     setMessage(error.response?.data?.error || "❌ Upload gagal.");
+  //   }
+  // };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -52,9 +88,10 @@ const VideoUploadForm = () => {
       setMessage("✅ Video berhasil diupload!");
       console.log(videoData);
 
+      // ✅ Upload thumbnail (jika ada)
       if (thumbnail && videoData?.id) {
         setMessage((prev) => prev + " ⏳ Mengupload thumbnail...");
-        await uploadThumbnail(videoData.id, thumbnail);
+        await uploadThumbnail(userId, videoData.id, thumbnail); // ← di sini perbaikannya
         setMessage((prev) => prev + " ✅ Thumbnail berhasil diupload!");
       }
 

@@ -63,14 +63,29 @@ axiosInstance.interceptors.response.use(null, async (error) => {
 });
 
 
+await uploadThumbnail(userId, videoData.id, thumbnail);
 
 
 // VIDEO API
 
 // Upload video
+// export const uploadVideo = async (userId, file, title = "", description = "") => {
+//   const formData = new FormData();
+//   formData.append("video_file", file); // ✅ sesuai backend
+//   if (title) formData.append("title", title);
+//   if (description) formData.append("description", description);
+
+//   const response = await axiosInstance.post(`/users/${userId}/videos`, formData, {
+//     headers: {
+//       "Content-Type": "multipart/form-data",
+//     },
+//   });
+
+//   return response.data;
+// };
 export const uploadVideo = async (userId, file, title = "", description = "") => {
   const formData = new FormData();
-  formData.append("video_file", file); // ✅ sesuai backend
+  formData.append("video_file", file);
   if (title) formData.append("title", title);
   if (description) formData.append("description", description);
 
@@ -80,10 +95,8 @@ export const uploadVideo = async (userId, file, title = "", description = "") =>
     },
   });
 
-  return response.data;
+  return response.data; // response must include video.id
 };
-
-
 
 // Get all videos
 export const getAllVideos = async () => {
@@ -114,14 +127,26 @@ export const updateVideoMetadata = async (videoId, data) => {
 // THUMBNAIL API
 
 // Upload thumbnail
-export const uploadThumbnail = async (videoId, file) => {
-  const formData = new FormData();
-  formData.append('thumbnail_url', file);
+// export const uploadThumbnail = async (videoId, file) => {
+//   const formData = new FormData();
+//   formData.append('thumbnail_url', file);
 
-  const response = await axiosInstance.post(`/videos/${videoId}/thumbnail`, formData, {
+//   const response = await axiosInstance.post(`/videos/${videoId}/thumbnail`, formData, {
+//     headers: {
+//       'Content-Type': 'multipart/form-data'
+//     }
+//   });
+
+//   return response.data;
+// };
+export const uploadThumbnail = async (userId, videoId, file) => {
+  const formData = new FormData();
+  formData.append("thumbnail_url", file);
+
+  const response = await axiosInstance.post(`/users/${userId}/videos/${videoId}/thumbnail`, formData, {
     headers: {
-      'Content-Type': 'multipart/form-data'
-    }
+      "Content-Type": "multipart/form-data",
+    },
   });
 
   return response.data;
@@ -229,7 +254,8 @@ export const uploadProfilePic = async (id, file) => {
   const formData = new FormData();
   formData.append("profile_pic", file);
 
-  const response = await axiosInstance.post(`/users/${id}/profile-picture`, formData, {
+  // const response = await axiosInstance.post(`/users/${id}/profile-picture`, formData, {
+  const response = await axiosInstance.post(`/videos/:video_id/user/:user_id/thumbnail`, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
