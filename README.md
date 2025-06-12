@@ -1,178 +1,97 @@
-📺 Video API
-1. Upload Video
-POST /users/:user_id/videos
-
-Headers: Authorization: Bearer <token>
-
-Middleware: verifyToken, checkUserIdMatch, videoUploadLimiter, upload
-
-Description: Mengunggah video baru milik user tertentu.
-
-2. Update Video Metadata
-PUT /users/:user_id/videos/:video_id
-
-Headers: Authorization: Bearer <token>
-
-Middleware: verifyToken, checkUserIdMatch, checkVideoOwnership
-
-Description: Memperbarui metadata video seperti judul, deskripsi.
-
-3. Upload Thumbnail
-POST /users/:user_id/videos/:video_id/thumbnail
-
-Headers: Authorization: Bearer <token>
-
-Middleware: verifyToken, checkUserIdMatch, checkVideoOwnership, validateVideoId
-
-Description: Mengunggah thumbnail untuk video tertentu.
-
-4. Update Thumbnail
-PUT /users/:user_id/videos/:video_id/thumbnail
-
-Headers: Authorization: Bearer <token>
-
-Middleware: verifyToken, checkUserIdMatch, checkVideoOwnership, validateVideoId
-
-Description: Memperbarui thumbnail video.
-
-5. Delete Thumbnail
-DELETE /users/:user_id/videos/:video_id/thumbnail
-
-Headers: Authorization: Bearer <token>
-
-Middleware: verifyToken, checkUserIdMatch, checkVideoOwnership, validateVideoId
-
-Description: Menghapus thumbnail video.
-
-6. Delete Video
-DELETE /users/:user_id/videos/:video_id
-
-Headers: Authorization: Bearer <token>
-
-Middleware: verifyToken, checkUserIdMatch, checkVideoOwnership, validateVideoId
-
-Description: Menghapus video milik user.
-
-7. Get All Videos
-GET /videos
-
-Description: Mengambil semua video yang tersedia secara publik.
-
-8. Get Video by ID
-GET /videos/:video_id
-
-Middleware: validateVideoId
-
-Description: Mengambil detail dari video berdasarkan ID.
-
-9. Get User Channel by Slug
-GET /channels/:slug/profile
-
-Description: Mengambil profil channel berdasarkan slug.
-
-10. Get Videos by Slug
-GET /channels/:slug/videos
-
-Description: Mengambil daftar video milik channel berdasarkan slug.
-
-👤 User API
-1. Register
-POST /users/register
-
-Body: { username, email, password }
-
-Description: Mendaftarkan user baru.
-
-2. Login
-POST /users/login
-
-Body: { email, password }
-
-Description: Login dan mendapatkan token.
-
-3. Logout
-DELETE /users/logout
-
-Headers: Authorization: Bearer <token>
-
-Middleware: verifyToken
-
-Description: Logout dan menghapus refresh token.
-
-4. Get User by ID
-GET /users/:user_id
-
-Description: Mendapatkan detail user berdasarkan ID.
-
-5. Delete User
-DELETE /users/:user_id
-
-Headers: Authorization: Bearer <token>
-
-Middleware: verifyToken, checkUserIdMatch
-
-Description: Menghapus user berdasarkan ID.
-
-6. Update Username
-PUT /users/:user_id/username
-
-Headers: Authorization: Bearer <token>
-
-Body: { newUsername }
-
-Middleware: verifyToken, checkUserIdMatch
-
-Description: Memperbarui username user.
-
-7. Upload Profile Picture
-POST /users/:user_id/profile-picture
-
-Headers: Authorization: Bearer <token>
-
-Description: Mengunggah foto profil.
-
-8. Update Profile Picture
-PUT /users/:user_id/profile-picture
-
-Headers: Authorization: Bearer <token>
-
-Description: Memperbarui foto profil.
-
-9. Delete Profile Picture
-DELETE /users/:user_id/profile-picture
-
-Headers: Authorization: Bearer <token>
-
-Description: Menghapus foto profil.
-
-10. Refresh Token
-GET /token
-
-Description: Mendapatkan access token baru menggunakan refresh token.
-
-📸 Community Post API
-1. Upload Community Photo
-POST /photos
-
-Headers: Authorization: Bearer <token>
-
-Description: Mengunggah foto komunitas.
-
-2. Get Community Photo by ID
-GET /photos/:photo_id
-
-Description: Mengambil foto komunitas berdasarkan ID.
-
-3. Delete Community Photo
-DELETE /photos/:photo_id
-
-Headers: Authorization: Bearer <token>
-
-Middleware: checkPhotoOwnership
-
-Description: Menghapus foto komunitas tertentu.
-
-4. Get Community Posts by Channel Slug
-GET /channels/:slug/community
-
-Description: Mengambil semua post komunitas dari channel berdasarkan slug.
+# 📦 Video Sharing Platform API
+
+API ini terdiri dari 3 modul utama:
+- 🎬 Video Management
+- 👤 User Management
+- 🖼️ Community Posts
+
+## 🔐 Authentication & Token
+
+| Method | Endpoint            | Description                       |
+|--------|---------------------|-----------------------------------|
+| POST   | `/users/login`      | Login user                        |
+| GET    | `/token`            | Refresh token                     |
+| DELETE | `/users/logout`     | Logout and revoke token           |
+
+> 🛡️ Middleware:
+- `verifyToken`: Validates JWT
+- `refreshToken`: Issues a new token
+- `checkUserIdMatch`: Ensures the user matches the route param `user_id`
+
+---
+
+## 🎬 Video API
+
+### 🔒 Protected Routes (Require Token)
+
+| Method | Endpoint                                                   | Description                         |
+|--------|------------------------------------------------------------|-------------------------------------|
+| POST   | `/users/:user_id/videos`                                   | Upload video                        |
+| PUT    | `/users/:user_id/videos/:video_id`                         | Update video metadata               |
+| POST   | `/users/:user_id/videos/:video_id/thumbnail`              | Upload video thumbnail               |
+| PUT    | `/users/:user_id/videos/:video_id/thumbnail`              | Update video thumbnail               |
+| DELETE | `/users/:user_id/videos/:video_id/thumbnail`              | Delete video thumbnail               |
+| DELETE | `/users/:user_id/videos/:video_id`                         | Delete video                        |
+
+### 🌍 Public Routes
+
+| Method | Endpoint                        | Description                          |
+|--------|----------------------------------|-------------------------------------|
+| GET    | `/videos`                        | Get all videos                      |
+| GET    | `/videos/:video_id`              | Get video by ID                     |
+| GET    | `/channels/:slug/profile`        | Get user public profile by slug     |
+| GET    | `/channels/:slug/videos`         | Get all videos from channel (slug)  |
+
+---
+
+## 👤 User API
+
+| Method | Endpoint                                      | Description                      |
+|--------|-----------------------------------------------|----------------------------------|
+| POST   | `/users/register`                             | Register a new user              |
+| POST   | `/users/login`                                | Login user                       |
+| GET    | `/users/:user_id`                             | Get user data                    |
+| DELETE | `/users/:user_id`                             | Delete user                      |
+| PUT    | `/users/:user_id/username`                    | Update username                  |
+
+### 🖼️ Profile Picture Management
+
+| Method | Endpoint                                      | Description                      |
+|--------|-----------------------------------------------|----------------------------------|
+| POST   | `/users/:user_id/profile-picture`             | Upload profile picture           |
+| PUT    | `/users/:user_id/profile-picture`             | Update profile picture           |
+| DELETE | `/users/:user_id/profile-picture`             | Delete profile picture           |
+
+---
+
+## 🖼️ Community Post API
+
+| Method | Endpoint                          | Description                           |
+|--------|-----------------------------------|---------------------------------------|
+| POST   | `/photos`                         | Upload community post photo (token)   |
+| GET    | `/photos/:photo_id`              | Get post photo by ID                   |
+| GET    | `/channels/:slug/community`       | Get community posts by channel slug   |
+| DELETE | `/photos/:photo_id`              | Delete photo (only owner, token)       |
+
+---
+
+## 🧾 Middleware yang Digunakan
+
+| Middleware Name           | Fungsi                                                                       |
+|---------------------------|------------------------------------------------------------------------------|
+| `verifyToken`             | Validasi token JWT                                                           |
+| `refreshToken`            | Mengembalikan token baru                                                     |
+| `checkUserIdMatch`        | Memastikan `user_id` sesuai dengan user yang login                           |
+| `checkVideoOwnership`     | Memastikan video dimiliki oleh user                                          |
+| `validateVideoId`         | Validasi ID video                                                            |
+| `validateUserId`          | Validasi ID user                                                             | 
+| `upload`                  | Multer untuk upload video/file                                               |
+| `videoUploadLimiter`      | Membatasi frekuensi upload video                                             |
+| `syncVideosWithStorage`   | Sinkronisasi metadata dengan storage/hosting                                 |
+| `checkPhotoOwnership`     | Memastikan foto komunitas dimiliki oleh user yang menghapus                  |
+
+---
+
+## 📌 Catatan Tambahan
+
+- Gunakan header:  
